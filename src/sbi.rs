@@ -24,6 +24,7 @@ pub fn shutdown() -> ! {
             in("a7") 0x53525354u64, // syscall number for shutdown
             in("a6") 0u64,
             in("a0") 0u64, // exit code
+            in("a1") 0u64, // unused
         )
     }
     loop{}
