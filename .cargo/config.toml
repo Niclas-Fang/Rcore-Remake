@@ -4,5 +4,5 @@ target = "riscv64gc-unknown-none-elf"
 [target.riscv64gc-unknown-none-elf]
 rustflags = [
     "-Clink-arg=-Tlinker.ld",
-    "-Clink-arg=-nostartfiles",
 ]
+runner = "qemu-system-riscv64 -machine virt -nographic -bios default -kernel target/riscv64gc-unknown-none-elf/debug/my_os"

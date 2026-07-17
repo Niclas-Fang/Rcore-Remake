@@ -2,7 +2,7 @@ OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
 MEMORY {
-    RAM (rwx) : RAM (rwx) : ORIGIN = 0x80200000, LENGTH = 128M
+    RAM (rwx) : ORIGIN = 0x80200000, LENGTH = 128M
 }
 
 SECTIONS {
@@ -30,8 +30,8 @@ SECTIONS {
         _bss_end = .;
     } > RAM
 
-    . = ALIGN(8);
-    _stack_start = ORIGIN(RAM) + LENGTH(RAM);
+    _stack_start = _bss_end + 0x10000;
+
 
     /DISCARD/ : {
         *(.eh_frame)
