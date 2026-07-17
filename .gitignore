@@ -1,4 +1,4 @@
 /target
 .claude
-log.txt
+*.txt
 .vscode
