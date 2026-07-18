@@ -1,4 +1,4 @@
-.section .bss._stack
+.section .bss.stack
 .globl sstack
 sstack:
     .space 4096 * 16
