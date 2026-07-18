@@ -1,9 +1,16 @@
+.section .bss._stack
+.globl sstack
+sstack:
+    .space 4096 * 16
+.globl estack
+estack:
+
 .section .text.entry
 .globl _start
 _start:
-    la sp, _stack_start
-    la t0, _bss_start
-    la t1, _bss_end
+    la sp, estack
+    la t0, sbss
+    la t1, ebss
 
 1:
     bgeu t0, t1, 2f       

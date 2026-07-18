@@ -7,31 +7,43 @@ MEMORY {
 
 SECTIONS {
     . = ORIGIN(RAM);
+    skernel = .;
 
+    stext = .;
     .text : {
         KEEP(*(.text.entry))
         *(.text .text.*)
     } > RAM
+    . = ALIGN(4K);
+    etext = .;
 
+    srodata = .; 
     .rodata : ALIGN(4K) {
         *(.rodata .rodata.*)
         *(.srodata .srodata.*)
     } > RAM
+    . = ALIGN(4K);
+    erodata = .;
 
+    sdata = .; 
     .data : ALIGN(4K) {
         *(.data .data.*)
         *(.sdata .sdata.*)
     } > RAM
+    . = ALIGN(4K);
+    edata = .; 
 
+    
+    sbss = .; 
     .bss : ALIGN(4K) {
-        _bss_start = .;
+        *(.bss.stack)
         *(.bss .bss.*)
         *(.sbss .sbss.*)
-        _bss_end = .;
     } > RAM
+    . = ALIGN(4K);
+    ebss = .;
 
-    _stack_start = _bss_end + 0x10000;
-
+    ekernel = .;
 
     /DISCARD/ : {
         *(.eh_frame)
