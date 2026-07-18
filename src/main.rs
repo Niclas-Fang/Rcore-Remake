@@ -3,10 +3,10 @@
 #![allow(dead_code)]
 
 mod console;
+mod lang_items;
 mod logging;
 mod sbi;
 use core::arch::global_asm;
-use core::panic::PanicInfo;
 
 global_asm!(include_str!("entry.S"));
 
@@ -26,12 +26,5 @@ unsafe extern "C" fn kernel_main() -> ! {
     log::info!("This is info");
     log::debug!("This is debug info");
     log::trace!("This is a trace");
-
-    sbi::shutdown();
-}
-
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    log::error!("Kernel panic!\n");
     sbi::shutdown();
 }
