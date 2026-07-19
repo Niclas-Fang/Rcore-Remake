@@ -26,3 +26,11 @@ pub fn shutdown() -> ! {
     }
     loop {}
 }
+
+pub fn set_timer(time: u64) {
+    unsafe {
+        asm!("ecall",
+        in("a7") 0u64,
+        in("a0") time)
+    }
+}

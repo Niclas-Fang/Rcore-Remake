@@ -6,6 +6,7 @@ mod console;
 mod lang_items;
 mod logging;
 mod sbi;
+mod trap;
 use core::arch::global_asm;
 
 global_asm!(include_str!("entry.S"));
@@ -18,7 +19,6 @@ unsafe extern "C" {
 #[unsafe(no_mangle)]
 unsafe extern "C" fn kernel_main() -> ! {
     logging::init();
-
     println!("Helloworld from main!");
 
     log::error!("This is an error");
@@ -26,5 +26,6 @@ unsafe extern "C" fn kernel_main() -> ! {
     log::info!("This is info");
     log::debug!("This is debug info");
     log::trace!("This is a trace");
+
     sbi::shutdown();
 }

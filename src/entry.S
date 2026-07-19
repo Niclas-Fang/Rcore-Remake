@@ -9,6 +9,7 @@ estack:
 .globl _start
 _start:
     la sp, estack
+    csrw sscratch,sp
     la t0, sbss
     la t1, ebss
 

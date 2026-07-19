@@ -5,5 +5,7 @@ edition = "2024"
 
 [dependencies]
 log = "*"
+riscv = "*"
 
 [build-dependencies]
+

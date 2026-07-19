@@ -7,7 +7,7 @@
     sd x\n, \n*8(sp)
 .endm
 
-.macro SAVE_GP n
+.macro LOAD_GP n
     ld x\n, \n*8(sp)
 .endm
 
@@ -27,19 +27,19 @@ _trap_entry:
 
     csrr t0, sstatus
     csrr t1, sepc
+    csrr t2, sscratch
+
     sd t0, 32*8(sp)
     sd t1, 33*8(sp)
-
-    csrr t2, sscratch
     sd t2, 2*8(sp)
+    
 
     mv a0, sp
     call trap_handler
-    
-
-.globl _restore
-
     mv sp, a0
+
+.globl __restore
+__restore:
 
     ld t0,32*8(sp)
     ld t1, 33*8(sp)
