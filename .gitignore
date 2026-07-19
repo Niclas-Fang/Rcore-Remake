@@ -2,3 +2,4 @@
 .claude
 *.txt
 .vscode
+/user
