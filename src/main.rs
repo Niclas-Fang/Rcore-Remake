@@ -7,6 +7,7 @@ mod lang_items;
 mod logging;
 mod sbi;
 mod trap;
+mod syscall;
 use core::arch::global_asm;
 
 global_asm!(include_str!("entry.S"));

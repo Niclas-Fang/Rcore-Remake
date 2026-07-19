@@ -9,3 +9,6 @@ riscv = "*"
 
 [build-dependencies]
 
+
+[workspace]
+members = ["user"]
