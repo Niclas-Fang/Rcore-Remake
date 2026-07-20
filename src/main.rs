@@ -2,12 +2,13 @@
 #![no_main]
 #![allow(dead_code)]
 
+mod batch;
 mod console;
 mod lang_items;
 mod logging;
 mod sbi;
-mod trap;
 mod syscall;
+mod trap;
 use core::arch::global_asm;
 
 global_asm!(include_str!("entry.S"));
@@ -20,7 +21,8 @@ unsafe extern "C" {
 #[unsafe(no_mangle)]
 unsafe extern "C" fn kernel_main() -> ! {
     logging::init();
-    println!("Helloworld from main!");
+    trap::init();
+    println!("Hello world from main!");
 
     log::error!("This is an error");
     log::warn!("This is a warning");
@@ -28,5 +30,5 @@ unsafe extern "C" fn kernel_main() -> ! {
     log::debug!("This is debug info");
     log::trace!("This is a trace");
 
-    sbi::shutdown();
+    batch::run_next_app();
 }

@@ -2,15 +2,15 @@
 .globl _trap_entry
 
     
-
+.altmacro
 .macro SAVE_GP n
     sd x\n, \n*8(sp)
 .endm
-
 .macro LOAD_GP n
     ld x\n, \n*8(sp)
 .endm
 
+    .align 2
 _trap_entry:
     csrrw sp, sscratch, sp
     addi sp, sp, -34*8
@@ -32,15 +32,13 @@ _trap_entry:
     sd t0, 32*8(sp)
     sd t1, 33*8(sp)
     sd t2, 2*8(sp)
-    
-
+  
     mv a0, sp
     call trap_handler
-    mv sp, a0
-
+    
 .globl __restore
 __restore:
-
+    mv sp, a0
     ld t0,32*8(sp)
     ld t1, 33*8(sp)
     ld t2, 2*8(sp)

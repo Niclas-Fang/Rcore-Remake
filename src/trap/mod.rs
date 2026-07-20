@@ -3,10 +3,12 @@ mod context;
 use context::TrapContext;
 use core::arch::global_asm;
 use riscv::{
-    ExceptionNumber, interrupt::{Exception, Trap}, register::{mtvec::TrapMode, scause, stval, stvec},
+    ExceptionNumber,
+    interrupt::{Exception, Trap},
+    register::{mtvec::TrapMode, scause, stval, stvec},
 };
 
-use crate::{println, syscall};
+use crate::{batch::run_next_app, println, syscall};
 
 global_asm!(include_str!("trap.S"));
 
@@ -27,13 +29,17 @@ pub fn trap_handler(context: &mut TrapContext) -> &mut TrapContext {
     match scause.cause() {
         Trap::Exception(e) => match Exception::from_number(e) {
             Ok(Exception::UserEnvCall) => {
-                context.x[10] = syscall::sys_call(context.x[17],[context.x[10],context.x[11],context.x[12]])
+                context.sepc += 4;
+                context.x[10] =
+                    syscall::sys_call(context.x[17], [context.x[10], context.x[11], context.x[12]])
             }
             Ok(Exception::StoreFault) | Ok(Exception::StorePageFault) => {
                 println!("[kernel] PageFault in application, kernel killed it.");
+                run_next_app()
             }
             Ok(Exception::IllegalInstruction) => {
                 println!("[kernel] IllegalInstruction in application, kernel killed it.");
+                run_next_app()
             }
             _ => {
                 panic!(
@@ -52,4 +58,15 @@ pub fn trap_handler(context: &mut TrapContext) -> &mut TrapContext {
         }
     }
     context
+}
+
+fn goto_user(context: &mut TrapContext) -> ! {
+    unsafe extern "C" {
+        fn __restore(context_address: usize);
+    }
+    context.x[2] = context as *const TrapContext as usize;
+    unsafe {
+        __restore(context as *const TrapContext as usize);
+    }
+    loop {}
 }
