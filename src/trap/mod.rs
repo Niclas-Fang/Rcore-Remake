@@ -1,6 +1,6 @@
 mod context;
 
-use context::TrapContext;
+pub use context::TrapContext;
 use core::arch::global_asm;
 use riscv::{
     ExceptionNumber,
@@ -58,13 +58,4 @@ pub fn trap_handler(context: &mut TrapContext) -> &mut TrapContext {
         }
     }
     context
-}
-
-fn goto_user(context: TrapContext) -> ! {
-    unsafe extern "C" {
-        fn __restore(context_address: usize) -> !;
-    }
-    unsafe {
-        __restore(&context as *const TrapContext as usize);
-    }
 }

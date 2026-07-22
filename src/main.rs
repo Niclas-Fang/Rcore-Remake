@@ -5,11 +5,11 @@
 mod batch;
 mod console;
 mod lang_items;
+mod link_app;
 mod logging;
 mod sbi;
 mod syscall;
 mod trap;
-mod link_app;
 use core::arch::global_asm;
 
 global_asm!(include_str!("entry.S"));
