@@ -9,6 +9,7 @@ mod logging;
 mod sbi;
 mod syscall;
 mod trap;
+mod link_app;
 use core::arch::global_asm;
 
 global_asm!(include_str!("entry.S"));
