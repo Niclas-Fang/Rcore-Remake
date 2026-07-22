@@ -10,9 +10,10 @@ static USER_STACK_TOP: usize = 0x84400000;
 
 pub fn run_next_app() -> ! {
     if unsafe { CURRENT_APP } >= NUM_APPS {
-        println!("all apps already run");
+        println!("[kernel] All apps already run");
         sbi::shutdown();
     }
+    println!("[kernel] Running app {}", unsafe { CURRENT_APP });
     let app = APPS[unsafe { CURRENT_APP }];
     unsafe { copy(app.as_ptr(), USER_BASE as *mut u8, app.len()) };
     unsafe {
