@@ -24,7 +24,7 @@ pub fn shutdown() -> ! {
             in("a0") 0u64, // exit code
         )
     }
-    loop {}
+    unreachable!()
 }
 
 pub fn set_timer(time: u64) {

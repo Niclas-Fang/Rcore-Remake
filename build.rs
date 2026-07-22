@@ -11,9 +11,9 @@ fn main() -> std::io::Result<()> {
                 && path.is_file()
                 && !path.file_name()?.to_str()?.starts_with(".")
             {
-                return Some(path);
+                Some(path)
             } else {
-                return None;
+                None
             }
         })
         .collect();

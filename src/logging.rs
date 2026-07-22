@@ -15,7 +15,7 @@ impl Log for Logger {
         let args = record.args();
         //let mut console: console::Console = console();
         let color = color(level);
-        println!("{}[{:>5}]{}", color, level, args);
+        println!("{}[{}]{}", color, level, args);
     }
     fn flush(&self) {}
 }
