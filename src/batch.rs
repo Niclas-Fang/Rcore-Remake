@@ -1,25 +1,16 @@
 use core::ptr::copy;
 
 use crate::link_app::{APPS, NUM_APPS};
-use crate::trap::TrapContext;
+use crate::trap::{TrapContext, goto_user};
 use crate::{println, sbi};
 
 static mut CURRENT_APP: usize = 0;
 static USER_BASE: usize = 0x80400000;
 static USER_STACK_TOP: usize = 0x84400000;
 
-fn goto_user(context: TrapContext) -> ! {
-    unsafe extern "C" {
-        fn __restore(context_address: usize) -> !;
-    }
-    unsafe {
-        __restore(&context as *const TrapContext as usize);
-    }
-}
-
 pub fn run_next_app() -> ! {
     if unsafe { CURRENT_APP } >= NUM_APPS {
-        println!("all apps already");
+        println!("all apps already run");
         sbi::shutdown();
     }
     let app = APPS[unsafe { CURRENT_APP }];

@@ -1,12 +1,12 @@
 //use core::arch::asm;
 mod fd;
 mod process;
-use crate::println;
+//use crate::println;
 const SYS_WRITE: usize = 64;
 const SYS_EXIT: usize = 93;
 
 pub fn sys_call(which: usize, args: [usize; 3]) -> usize {
-    println!("call from user of {} with args {:?}", which, args);
+    //println!("call from user of {} with args {:?}", which, args);
     match which {
         SYS_WRITE => fd::sys_write(args[0], args[1] as *const u8, args[2]) as usize,
         SYS_EXIT => {

@@ -59,3 +59,12 @@ pub fn trap_handler(context: &mut TrapContext) -> &mut TrapContext {
     }
     context
 }
+
+pub fn goto_user(context: TrapContext) -> ! {
+    unsafe extern "C" {
+        fn __restore(context_address: usize) -> !;
+    }
+    unsafe {
+        __restore(&context as *const TrapContext as usize);
+    }
+}
