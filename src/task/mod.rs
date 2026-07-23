@@ -23,16 +23,16 @@ pub struct TaskManager {
     app_num: usize,
 }
 
-pub fn suspend_current() {}
-
-pub fn exit_current() {}
-
-pub fn run_next_task() -> ! {
-    unimplemented!()
+fn suspend_current() {
+    TASK_MANAGER.suspend_current();
 }
 
-fn find_next_app() -> usize {
-    unimplemented!()
+fn exit_current() {
+    TASK_MANAGER.exit_current();
+}
+
+fn run_next_task() -> ! {
+    TASK_MANAGER.run_next_task()
 }
 
 pub fn exit_current_and_run_next() -> ! {
@@ -45,6 +45,16 @@ pub fn suspend_current_and_run_next() -> ! {
     run_next_task()
 }
 
+impl TaskManager {
+    fn suspend_current(&self) {}
+    fn exit_current(&self) {}
+    fn run_next_task(&self) -> ! {
+        unimplemented!()
+    }
+    fn find_next_task(&self) -> usize {
+        unimplemented!()
+    }
+}
 lazy_static! {
     pub static ref TASK_MANAGER: TaskManager = {
         let app_num = num_apps();
