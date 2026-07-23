@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "gdb",
+            "request": "launch",
+            "name": "QEMU RISC-V (调试内核)",
+            "executable": "${workspaceFolder}/target/riscv64gc-unknown-none-elf/debug/my_os",
+            "target": ":1234",
+            "remote": true,
+            "gdbpath": "/usr/bin/gdb-multiarch",
+            "cwd": "${workspaceFolder}",
+            "autorun": [
+                "set architecture riscv:rv64",
+                "target remote :1234",
+                "break _start",
+                "continue"
+            ]
+        }
+    ]
+}
