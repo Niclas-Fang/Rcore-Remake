@@ -31,6 +31,20 @@ pub fn run_next_task() -> ! {
     unimplemented!()
 }
 
+fn find_next_app() -> usize {
+    unimplemented!()
+}
+
+pub fn exit_current_and_run_next() -> ! {
+    exit_current();
+    run_next_task()
+}
+
+pub fn suspend_current_and_run_next() -> ! {
+    suspend_current();
+    run_next_task()
+}
+
 lazy_static! {
     pub static ref TASK_MANAGER: TaskManager = {
         let app_num = num_apps();
