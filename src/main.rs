@@ -6,9 +6,11 @@ mod batch;
 mod console;
 mod lang_items;
 mod link_app;
+mod loader;
 mod logging;
 mod sbi;
 mod syscall;
+mod task;
 mod trap;
 use core::arch::global_asm;
 
