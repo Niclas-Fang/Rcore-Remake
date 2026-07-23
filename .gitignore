@@ -1,7 +1,6 @@
 /target
 .claude
 *.txt
-.vscode
 /user
 CLAUDE*
 src/link_app.rs
