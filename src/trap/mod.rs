@@ -8,7 +8,10 @@ use riscv::{
     register::{mtvec::TrapMode, scause, stval, stvec},
 };
 
-use crate::{batch::run_next_app, println, syscall};
+use crate::{
+    println, syscall,
+    task::{exit_current, run_next_task},
+};
 
 global_asm!(include_str!("trap.S"));
 
@@ -35,11 +38,13 @@ pub fn trap_handler(context: &mut TrapContext) -> &mut TrapContext {
             }
             Ok(Exception::StoreFault) | Ok(Exception::StorePageFault) => {
                 println!("[kernel] PageFault in application, kernel killed it.");
-                run_next_app()
+                exit_current();
+                run_next_task();
             }
             Ok(Exception::IllegalInstruction) => {
                 println!("[kernel] IllegalInstruction in application, kernel killed it.");
-                run_next_app()
+                exit_current();
+                run_next_task();
             }
             _ => {
                 panic!(

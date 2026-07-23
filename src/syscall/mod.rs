@@ -13,6 +13,9 @@ pub fn sys_call(which: usize, args: [usize; 3]) -> usize {
         SYS_EXIT => {
             process::sys_exit(args[0] as i32);
         }
+        SYS_YIELD => {
+            process::sys_yield();
+        }
         _ => {
             panic!("Unsupported sys_call");
         }
