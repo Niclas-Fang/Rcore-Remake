@@ -1,6 +1,5 @@
 use crate::{
-    sync_refcell::SyncRefCell,
-    task::{Status::Exit, switch::__switch},
+    sync_refcell::SyncRefCell, task::{Status::{Exit, Running}, switch::__switch},
 };
 pub use context::TaskContext;
 use lazy_static::lazy_static;
@@ -39,18 +38,19 @@ fn exit_current() {
     TASK_MANAGER.exit_current();
 }
 
-fn run_next_task() -> ! {
+pub fn run_next_task(){
     TASK_MANAGER.run_next_task()
 }
 
 pub fn exit_current_and_run_next() -> ! {
     exit_current();
-    run_next_task()
+    run_next_task();
+    unreachable!();
 }
 
-pub fn suspend_current_and_run_next() -> ! {
+pub fn suspend_current_and_run_next(){
     suspend_current();
-    run_next_task()
+    run_next_task();
 }
 
 impl TaskManager {
@@ -60,12 +60,13 @@ impl TaskManager {
     fn exit_current(&self) {
         self.tasks.borrow_mut()[*self.running_task.borrow()].status = Exit;
     }
-    fn run_next_task(&self) -> ! {
+    fn run_next_task(&self){
         let next_task = self.find_next_task();
         let current_context =
             &mut self.tasks.borrow_mut()[*self.running_task.borrow()].context as *mut TaskContext;
         let next_context = &self.tasks.borrow()[next_task].context as *const TaskContext;
         *self.running_task.borrow_mut() = next_task;
+        self.tasks.borrow_mut()[next_task].status = Running;
         unsafe { __switch(current_context, next_context) };
     }
     fn find_next_task(&self) -> usize {
