@@ -84,10 +84,10 @@ lazy_static! {
             task.context = TaskContext::goto_restore(init_app_cx(i));
             task.status = Status::Ready;
         }
-        TaskManager {
+        unsafe {TaskManager {
             app_num,
             tasks: SyncRefCell::new(tasks),
             running_task: SyncRefCell::new(0),
-        }
+        }}
     };
 }

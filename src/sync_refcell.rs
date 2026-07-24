@@ -10,7 +10,7 @@ pub struct SyncRefCell<T> {
 unsafe impl<T> Sync for SyncRefCell<T> {}
 
 impl<T> SyncRefCell<T> {
-    pub fn new(value: T) -> Self {
+    pub unsafe fn new(value: T) -> Self {
         Self {
             inner: RefCell::new(value),
         }
