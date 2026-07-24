@@ -3,12 +3,15 @@ mod context;
 pub use context::TrapContext;
 use core::arch::global_asm;
 use riscv::{
-    ExceptionNumber,
-    interrupt::{Exception, Trap},
+    ExceptionNumber, InterruptNumber,
+    interrupt::{Exception, Interrupt, Trap},
     register::{mtvec::TrapMode, scause, stval, stvec},
 };
 
-use crate::{println, syscall, task::exit_current_and_run_next};
+use crate::{
+    println, syscall,
+    task::{exit_current_and_run_next, suspend_current_and_run_next},
+};
 
 global_asm!(include_str!("trap.S"));
 
@@ -43,19 +46,24 @@ pub fn trap_handler(context: &mut TrapContext) -> &mut TrapContext {
             }
             _ => {
                 panic!(
-                    "Unsupported trap {:?}, stval = {:#x}!",
+                    "Unsupported Exception {:?}, stval = {:#x}!",
                     scause.cause(),
                     stval
                 );
             }
         },
-        Trap::Interrupt(_) => {
-            panic!(
-                "Unsupported trap {:?}, stval = {:#x}!",
-                scause.cause(),
-                stval
-            );
-        }
+        Trap::Interrupt(e) => match Interrupt::from_number(e) {
+            Ok(Interrupt::SupervisorTimer) => {
+                suspend_current_and_run_next();
+            }
+            _ => {
+                panic!(
+                    "Unsupported Interrupt {:?}, stval = {:#?}",
+                    scause.cause(),
+                    stval
+                );
+            }
+        },
     }
     context
 }
