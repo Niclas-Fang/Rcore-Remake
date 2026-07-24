@@ -6,4 +6,3 @@ rustflags = [
     "-Clink-arg=-Tlinker.ld",
 ]
 runner = "qemu-system-riscv64 -machine virt -nographic -bios default -kernel target/riscv64gc-unknown-none-elf/debug/my_os"
-fmt = "cargo fmt -- --emit src/link_app.rs"

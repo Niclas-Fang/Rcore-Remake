@@ -20,7 +20,7 @@ impl TaskContext {
         }
         Self {
             ra: __restore as *const () as usize,
-            sp: sp,
+            sp,
             s: [0; 12],
         }
     }

@@ -99,12 +99,15 @@ impl TaskManager {
         shutdown();
     }
     fn run_first_task(&self) -> ! {
-        let task0 = self.tasks.borrow_mut()[0];
-        self.tasks.borrow_mut()[0].status = Running;
-        let first_context = &task0.context as *const TaskContext;
+        let first_cx_ptr: *const TaskContext;
+        {
+            let mut tasks = self.tasks.borrow_mut();
+            tasks[0].status = Running;
+            first_cx_ptr = &tasks[0].context as *const TaskContext;
+        }
         let mut place_holder = TaskContext::init();
         unsafe {
-            __switch(&mut place_holder as *mut TaskContext, first_context);
+            __switch(&mut place_holder as *mut TaskContext, first_cx_ptr);
         }
         unreachable!()
     }
