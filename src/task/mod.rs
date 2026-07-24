@@ -1,7 +1,12 @@
 pub use context::TaskContext;
+use crate::{sync_refcell::SyncRefCell, task::Status::Exit};
 use lazy_static::lazy_static;
 
-use crate::loader::{MAX_NUM_APP, init_app_cx, num_apps};
+use crate::{
+    loader::{MAX_NUM_APP, init_app_cx, num_apps},
+    sbi::shutdown,
+    task::Status::{Ready, Suspended},
+};
 mod context;
 mod switch;
 #[derive(Clone, Copy)]
@@ -9,7 +14,7 @@ struct Task {
     status: Status,
     context: TaskContext,
 }
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 enum Status {
     Ready,
     Running,
@@ -18,13 +23,13 @@ enum Status {
 }
 
 pub struct TaskManager {
-    running_task: usize,
-    tasks: [Task; 16],
+    running_task: SyncRefCell<usize>,
+    tasks: SyncRefCell<[Task; MAX_NUM_APP]>,
     app_num: usize,
 }
 
 fn suspend_current() {
-    TASK_MANAGER.suspend_current();
+        TASK_MANAGER.suspend_current();
 }
 
 fn exit_current() {
@@ -46,13 +51,26 @@ pub fn suspend_current_and_run_next() -> ! {
 }
 
 impl TaskManager {
-    fn suspend_current(&self) {}
-    fn exit_current(&self) {}
+    fn suspend_current(&self) {
+        self.tasks.borrow_mut()[*self.running_task.borrow()].status = Suspended;
+    }
+    fn exit_current(&self) {
+        self.tasks.borrow_mut()[*self.running_task.borrow()].status = Exit;
+    }
     fn run_next_task(&self) -> ! {
         unimplemented!()
     }
     fn find_next_task(&self) -> usize {
-        unimplemented!()
+        let running = *self.running_task.borrow();
+        let tasks = self.tasks.borrow();
+        for i in 0..self.app_num {
+            let idx = (running + i) % self.app_num;
+            let status = tasks[idx].status;
+            if status == Ready || status == Suspended {
+                return idx;
+            }
+        }
+        shutdown();
     }
 }
 lazy_static! {
@@ -68,8 +86,8 @@ lazy_static! {
         }
         TaskManager {
             app_num,
-            tasks,
-            running_task: 0,
+            tasks: SyncRefCell::new(tasks),
+            running_task: SyncRefCell::new(0),
         }
     };
 }

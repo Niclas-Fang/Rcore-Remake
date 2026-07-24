@@ -9,6 +9,7 @@ mod link_app;
 mod loader;
 mod logging;
 mod sbi;
+mod sync_refcell;
 mod syscall;
 mod task;
 mod trap;
