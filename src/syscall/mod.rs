@@ -5,6 +5,7 @@ mod process;
 const SYS_WRITE: usize = 64;
 const SYS_EXIT: usize = 93;
 const SYS_YIELD: usize = 124;
+const SYS_GET_TIME: usize = 169;
 
 pub fn sys_call(which: usize, args: [usize; 3]) -> usize {
     //println!("call from user of {} with args {:?}", which, args);
@@ -14,6 +15,7 @@ pub fn sys_call(which: usize, args: [usize; 3]) -> usize {
             process::sys_exit(args[0] as i32);
         }
         SYS_YIELD => process::sys_yield(),
+        SYS_GET_TIME => process::sys_get_time(),
         _ => {
             panic!("Unsupported sys_call");
         }

@@ -12,6 +12,7 @@ mod sbi;
 mod sync_refcell;
 mod syscall;
 mod task;
+mod timer;
 mod trap;
 use core::arch::global_asm;
 

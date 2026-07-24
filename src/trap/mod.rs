@@ -11,6 +11,7 @@ use riscv::{
 use crate::{
     println, syscall,
     task::{exit_current_and_run_next, suspend_current_and_run_next},
+    timer::set_trigger,
 };
 
 global_asm!(include_str!("trap.S"));
@@ -54,6 +55,7 @@ pub fn trap_handler(context: &mut TrapContext) -> &mut TrapContext {
         },
         Trap::Interrupt(e) => match Interrupt::from_number(e) {
             Ok(Interrupt::SupervisorTimer) => {
+                set_trigger();
                 suspend_current_and_run_next();
             }
             _ => {

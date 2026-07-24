@@ -27,7 +27,7 @@ pub fn shutdown() -> ! {
     unreachable!()
 }
 
-pub fn set_timer(time: u64) {
+pub fn set_timer(time: usize) {
     unsafe {
         asm!("ecall",
         in("a7") 0u64,
