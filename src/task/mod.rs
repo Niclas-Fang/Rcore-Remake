@@ -1,5 +1,9 @@
 use crate::{
-    sync_refcell::SyncRefCell, task::{Status::{Exit, Running}, switch::__switch},
+    sync_refcell::SyncRefCell,
+    task::{
+        Status::{Exit, Running},
+        switch::__switch,
+    },
 };
 pub use context::TaskContext;
 use lazy_static::lazy_static;
@@ -38,7 +42,7 @@ fn exit_current() {
     TASK_MANAGER.exit_current();
 }
 
-pub fn run_next_task(){
+pub fn run_next_task() {
     TASK_MANAGER.run_next_task()
 }
 
@@ -48,7 +52,7 @@ pub fn exit_current_and_run_next() -> ! {
     unreachable!();
 }
 
-pub fn suspend_current_and_run_next(){
+pub fn suspend_current_and_run_next() {
     suspend_current();
     run_next_task();
 }
@@ -60,7 +64,7 @@ impl TaskManager {
     fn exit_current(&self) {
         self.tasks.borrow_mut()[*self.running_task.borrow()].status = Exit;
     }
-    fn run_next_task(&self){
+    fn run_next_task(&self) {
         let next_task = self.find_next_task();
         let current_context =
             &mut self.tasks.borrow_mut()[*self.running_task.borrow()].context as *mut TaskContext;
@@ -72,7 +76,7 @@ impl TaskManager {
     fn find_next_task(&self) -> usize {
         let running = *self.running_task.borrow();
         let tasks = self.tasks.borrow();
-        for i in 0..self.app_num {
+        for i in 1..self.app_num + 1 {
             let idx = (running + i) % self.app_num;
             let status = tasks[idx].status;
             if status == Ready || status == Suspended {
