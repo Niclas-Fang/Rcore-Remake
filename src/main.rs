@@ -15,7 +15,7 @@ mod task;
 mod trap;
 use core::arch::global_asm;
 
-use crate::{loader::load_apps, task::run_next_task};
+use crate::{loader::load_apps, task::run_first_task};
 
 global_asm!(include_str!("entry.S"));
 
@@ -37,6 +37,5 @@ unsafe extern "C" fn kernel_main() -> ! {
     log::trace!("This is a trace");
 
     load_apps();
-    run_next_task();
-    unreachable!();
+    run_first_task()
 }

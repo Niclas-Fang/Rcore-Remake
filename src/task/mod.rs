@@ -57,6 +57,10 @@ pub fn suspend_current_and_run_next() {
     run_next_task();
 }
 
+pub fn run_first_task() -> ! {
+    TASK_MANAGER.run_first_task()
+}
+
 impl TaskManager {
     fn suspend_current(&self) {
         self.tasks.borrow_mut()[*self.running_task.borrow()].status = Suspended;
@@ -66,9 +70,18 @@ impl TaskManager {
     }
     fn run_next_task(&self) {
         let next_task = self.find_next_task();
-        let current_context =
-            &mut self.tasks.borrow_mut()[*self.running_task.borrow()].context as *mut TaskContext;
-        let next_context = &self.tasks.borrow()[next_task].context as *const TaskContext;
+
+        let current_context = {
+            let mut tasks = self.tasks.borrow_mut();
+            let idx = *self.running_task.borrow();
+            &mut tasks[idx].context as *mut TaskContext
+        };
+
+        let next_context = {
+            let tasks = self.tasks.borrow();
+            &tasks[next_task].context as *const TaskContext
+        };
+
         *self.running_task.borrow_mut() = next_task;
         self.tasks.borrow_mut()[next_task].status = Running;
         unsafe { __switch(current_context, next_context) };
@@ -84,6 +97,16 @@ impl TaskManager {
             }
         }
         shutdown();
+    }
+    fn run_first_task(&self) -> ! {
+        let task0 = self.tasks.borrow_mut()[0];
+        self.tasks.borrow_mut()[0].status = Running;
+        let first_context = &task0.context as *const TaskContext;
+        let mut place_holder = TaskContext::init();
+        unsafe {
+            __switch(&mut place_holder as *mut TaskContext, first_context);
+        }
+        unreachable!()
     }
 }
 lazy_static! {
