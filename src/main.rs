@@ -37,6 +37,7 @@ unsafe extern "C" fn kernel_main() -> ! {
     log::debug!("This is debug info");
     log::trace!("This is a trace");
 
+    timer::init_timer();
     load_apps();
     run_first_task()
 }
