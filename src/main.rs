@@ -8,13 +8,13 @@ mod lang_items;
 mod link_app;
 mod loader;
 mod logging;
+mod mm;
 mod sbi;
 mod sync_refcell;
 mod syscall;
 mod task;
 mod timer;
 mod trap;
-mod mm;
 use core::arch::global_asm;
 
 use crate::{loader::load_apps, task::run_first_task};
