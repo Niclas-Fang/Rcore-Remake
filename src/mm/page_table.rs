@@ -4,10 +4,8 @@ use bitflags::bitflags;
 
 use crate::mm::address::{PAGE_SIZE, PhyAddr, PhyPageNum, VirtPageNum};
 
-#[derive(Clone, Copy)]
-pub struct PageTableEntry(usize);
 bitflags! {
-    #[derive(PartialEq)]
+    #[derive(PartialEq,Clone, Copy)]
     pub struct PTEFlags: u8 {
         const V = 1 << 0;
         const R = 1 << 1;
@@ -19,6 +17,9 @@ bitflags! {
         const D = 1 << 7;
     }
 }
+
+#[derive(Clone, Copy)]
+pub struct PageTableEntry(usize);
 
 impl PageTableEntry {
     pub fn new(ppn: PhyPageNum, flags: PTEFlags) -> Self {
@@ -50,12 +51,12 @@ pub struct PageTable {
 }
 
 impl PageTable {
-    fn new(root_ppn: PhyPageNum) -> Self {
+    pub fn new(root_ppn: PhyPageNum) -> Self {
         let root_phyaddr = Into::<PhyAddr>::into(root_ppn).0 as *mut PageTableEntry;
         unsafe {
-            let ptes: &mut [PageTableEntry] = from_raw_parts_mut(root_phyaddr, PAGE_SIZE);
-            for idx in 0..512 {
-                ptes[idx] = PageTableEntry(0)
+            let ptes: &mut [PageTableEntry] = from_raw_parts_mut(root_phyaddr, PAGE_SIZE / 8);
+            for pte in ptes {
+                *pte = PageTableEntry::empty();
             }
         }
         Self { root_ppn }
@@ -77,7 +78,7 @@ impl PageTable {
         }
         result
     }
-    fn map(&mut self, vpn: VirtPageNum, ppn: PhyPageNum, flags: PTEFlags) {
+    pub fn map(&mut self, vpn: VirtPageNum, ppn: PhyPageNum, flags: PTEFlags) {
         let [idx2, idx1, idx0] = vpn.index();
         let ptes = self.root_ppn.get_pte_array();
         let pte_l2 = &mut ptes[idx2];
@@ -99,16 +100,17 @@ impl PageTable {
         }
         ptes[idx0] = PageTableEntry::new(ppn, flags | PTEFlags::V);
     }
-    fn unmap(&mut self, vpn: VirtPageNum) {
+    pub fn unmap(&mut self, vpn: VirtPageNum) {
         if let Some(pte) = self.find_pte(vpn) {
             *pte = PageTableEntry::empty()
         }
     }
-    fn translate(&self, vpn: VirtPageNum) -> Option<PhyPageNum> {
+    pub fn translate(&self, vpn: VirtPageNum) -> Option<PhyPageNum> {
         let pte = self.find_pte(vpn)?;
+        if !pte.is_valid() {return None;}
         Some(pte.ppn())
     }
-    fn from_token(satp: usize) -> Self {
+    pub fn from_token(satp: usize) -> Self {
         Self {
             root_ppn: PhyPageNum(satp & ((1 << 44) - 1)),
         }
