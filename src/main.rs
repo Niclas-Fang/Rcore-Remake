@@ -14,6 +14,7 @@ mod syscall;
 mod task;
 mod timer;
 mod trap;
+mod mm;
 use core::arch::global_asm;
 
 use crate::{loader::load_apps, task::run_first_task};
