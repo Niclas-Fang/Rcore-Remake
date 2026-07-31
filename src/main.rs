@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 mod batch;
+mod config;
 mod console;
 mod lang_items;
 mod link_app;

@@ -2,6 +2,7 @@ OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
 MEMORY {
+    /* KERNEL_BASE=0x80200000, KERNEL_MEMORY_SIZE=128M — 见 src/config.rs */
     RAM (rwx) : ORIGIN = 0x80200000, LENGTH = 128M
 }
 

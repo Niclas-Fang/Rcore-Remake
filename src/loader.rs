@@ -1,12 +1,11 @@
 use core::ptr::copy;
 
-use crate::{link_app, trap::TrapContext};
-
-const KERNEL_STACK_SIZE: usize = 4096 * 2;
-const USER_STACK_SIZE: usize = 4096;
-pub const MAX_NUM_APP: usize = 16;
-const APP_SIZE: usize = 0x400000;
-static USER_BASE: usize = 0x80400000;
+use crate::{
+    config::{
+        APP_SIZE, KERNEL_STACK_SIZE, MAX_NUM_APP, USER_BASE, USER_STACK_SIZE,
+    },
+    link_app, trap::TrapContext,
+};
 
 #[derive(Clone, Copy)]
 struct KernelStack {

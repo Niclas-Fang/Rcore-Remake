@@ -1,3 +1,4 @@
+# 内核启动栈: 64KiB (见 src/config.rs)
 .section .bss.stack
 .globl sstack
 sstack:

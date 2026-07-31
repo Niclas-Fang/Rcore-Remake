@@ -9,7 +9,8 @@ pub use context::TaskContext;
 use lazy_static::lazy_static;
 
 use crate::{
-    loader::{MAX_NUM_APP, init_app_cx, num_apps},
+    config::MAX_NUM_APP,
+    loader::{init_app_cx, num_apps},
     sbi::shutdown,
     task::Status::{Ready, Suspended},
 };

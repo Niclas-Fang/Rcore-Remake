@@ -1,6 +1,7 @@
 use core::slice::from_raw_parts;
 
-const STD_OUTPUT: usize = 1;
+use crate::config::STD_OUTPUT;
+
 pub fn sys_write(fd: usize, buffer: *const u8, len: usize) -> isize {
     match fd {
         STD_OUTPUT => {

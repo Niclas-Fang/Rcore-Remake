@@ -11,8 +11,7 @@ pub struct PhyPageNum(pub usize);
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct VirtPageNum(pub usize);
 
-pub const PAGE_SIZE: usize = 1 << 12;
-pub const PAGE_SIZE_BIT: usize = 12;
+pub use crate::config::PAGE_SIZE;
 
 impl PhyAddr {
     fn offset(&self) -> usize {

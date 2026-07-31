@@ -1,12 +1,11 @@
 use core::ptr::copy;
 
+use crate::config::{USER_BASE, USER_STACK_TOP};
 use crate::link_app::{APPS, NUM_APPS};
 use crate::trap::{TrapContext, goto_user};
 use crate::{println, sbi};
 
 static mut CURRENT_APP: usize = 0;
-static USER_BASE: usize = 0x80400000;
-static USER_STACK_TOP: usize = 0x84400000;
 
 pub fn run_next_app() -> ! {
     if unsafe { CURRENT_APP } >= NUM_APPS {
