@@ -115,6 +115,9 @@ impl PageTable {
             root_ppn: PhyPageNum(satp & ((1 << 44) - 1)),
         }
     }
+    pub fn token(&self) -> usize {
+        (8usize << 60) | self.root_ppn.0
+    }
 }
 
 fn alloc_page() -> PageTableEntry {
