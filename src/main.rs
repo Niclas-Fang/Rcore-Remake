@@ -17,7 +17,7 @@ mod task;
 mod timer;
 mod trap;
 use core::arch::global_asm;
-
+extern crate alloc;
 use crate::{loader::load_apps, task::run_first_task};
 
 global_asm!(include_str!("entry.S"));

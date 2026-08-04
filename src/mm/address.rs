@@ -17,16 +17,36 @@ impl PhyAddr {
     fn offset(&self) -> usize {
         self.0 & (PAGE_SIZE - 1)
     }
+    /// Get the (floor) physical page number
+    pub fn floor(&self) -> PhyPageNum {
+        PhyPageNum(self.0 / PAGE_SIZE)
+    }
+    /// Get the (ceil) physical page number
+    pub fn ceil(&self) -> PhyPageNum {
+        PhyPageNum((self.0 - 1 + PAGE_SIZE) / PAGE_SIZE)
+    }
 }
 impl VirtAddr {
     fn offset(&self) -> usize {
         self.0 & (PAGE_SIZE - 1)
+    }
+    /// Get the (floor) virtual page number
+    pub fn floor(&self) -> VirtPageNum {
+        VirtPageNum(self.0 / PAGE_SIZE)
+    }
+    /// Get the (ceil) virtual page number
+    pub fn ceil(&self) -> VirtPageNum {
+        VirtPageNum((self.0 - 1 + PAGE_SIZE) / PAGE_SIZE)
     }
 }
 impl PhyPageNum {
     pub fn get_pte_array(&self) -> &'static mut [PageTableEntry] {
         let phy_addr: PhyAddr = (*self).into();
         unsafe { from_raw_parts_mut(phy_addr.0 as *mut PageTableEntry, PAGE_SIZE / 8) }
+    }
+    pub fn get_bytes_array(&self) -> &'static mut [u8] {
+        let pa: PhyAddr = (*self).into();
+        unsafe { core::slice::from_raw_parts_mut(pa.0 as *mut u8, PAGE_SIZE) }
     }
 }
 impl VirtPageNum {

@@ -2,7 +2,7 @@ use core::slice::from_raw_parts_mut;
 
 use bitflags::bitflags;
 
-use crate::mm::address::{PAGE_SIZE, PhyAddr, PhyPageNum, VirtPageNum};
+use crate::mm::{address::{PAGE_SIZE, PhyAddr, PhyPageNum, VirtPageNum}, frame_allocator::frame_alloc};
 
 bitflags! {
     #[derive(PartialEq,Clone, Copy)]
@@ -121,5 +121,6 @@ impl PageTable {
 }
 
 fn alloc_page() -> PageTableEntry {
-    unimplemented!()
+    let ppn = frame_alloc().expect("Unable to allocate new frame!");
+    PageTableEntry::new(ppn, PTEFlags::V)
 }
