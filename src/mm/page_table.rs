@@ -1,8 +1,12 @@
+use alloc::{vec, vec::Vec};
 use core::slice::from_raw_parts_mut;
 
 use bitflags::bitflags;
 
-use crate::mm::{address::{PAGE_SIZE, PhyAddr, PhyPageNum, VirtPageNum}, frame_allocator::frame_alloc};
+use crate::mm::{
+    address::{PAGE_SIZE, PhyAddr, PhyPageNum, VirtPageNum},
+    frame_allocator::{frame_alloc, FrameTracker},
+};
 
 bitflags! {
     #[derive(PartialEq,Clone, Copy)]
@@ -48,10 +52,17 @@ impl PageTableEntry {
 }
 pub struct PageTable {
     root_ppn: PhyPageNum,
+    frames: Vec<FrameTracker>,
 }
 
 impl PageTable {
-    pub fn new(root_ppn: PhyPageNum) -> Self {
+    pub fn new() -> Self {
+        let frame = frame_alloc().expect("Unable to allocate root page table frame!");
+        let root_ppn = frame.ppn;
+        let page_table = Self {
+            root_ppn,
+            frames: vec![frame],
+        };
         let root_phyaddr = Into::<PhyAddr>::into(root_ppn).0 as *mut PageTableEntry;
         unsafe {
             let ptes: &mut [PageTableEntry] = from_raw_parts_mut(root_phyaddr, PAGE_SIZE / 8);
@@ -59,7 +70,7 @@ impl PageTable {
                 *pte = PageTableEntry::empty();
             }
         }
-        Self { root_ppn }
+        page_table
     }
     fn find_pte(&self, vpn: VirtPageNum) -> Option<&mut PageTableEntry> {
         let idxs = vpn.index();
@@ -83,14 +94,18 @@ impl PageTable {
         let ptes = self.root_ppn.get_pte_array();
         let pte_l2 = &mut ptes[idx2];
         if !pte_l2.is_valid() {
-            *pte_l2 = alloc_page();
+            let frame = frame_alloc().expect("Unable to allocate new frame!");
+            *pte_l2 = PageTableEntry::new(frame.ppn, PTEFlags::V);
+            self.frames.push(frame);
         }
 
         let ptes = pte_l2.ppn();
         let ptes = ptes.get_pte_array();
         let pte_l1 = &mut ptes[idx1];
         if !pte_l1.is_valid() {
-            *pte_l1 = alloc_page();
+            let frame = frame_alloc().expect("Unable to allocate new frame!");
+            *pte_l1 = PageTableEntry::new(frame.ppn, PTEFlags::V);
+            self.frames.push(frame);
         }
 
         let ptes = pte_l1.ppn();
@@ -107,12 +122,15 @@ impl PageTable {
     }
     pub fn translate(&self, vpn: VirtPageNum) -> Option<PhyPageNum> {
         let pte = self.find_pte(vpn)?;
-        if !pte.is_valid() {return None;}
+        if !pte.is_valid() {
+            return None;
+        }
         Some(pte.ppn())
     }
     pub fn from_token(satp: usize) -> Self {
         Self {
             root_ppn: PhyPageNum(satp & ((1 << 44) - 1)),
+            frames: Vec::new(),
         }
     }
     pub fn token(&self) -> usize {
@@ -120,7 +138,3 @@ impl PageTable {
     }
 }
 
-fn alloc_page() -> PageTableEntry {
-    let ppn = frame_alloc().expect("Unable to allocate new frame!");
-    PageTableEntry::new(ppn, PTEFlags::V)
-}

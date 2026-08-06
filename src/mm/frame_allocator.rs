@@ -70,16 +70,16 @@ lazy_static! {
 
 pub fn init_frame_allocator() {
     unsafe extern "C" {
-        fn ekernel() -> usize;
+        fn ekernel();
     }
     FRAME_ALLOCATOR.borrow_mut().init(
-        PhyAddr(unsafe { ekernel() }).ceil(),
+        PhyAddr(ekernel as *const () as usize ).ceil(),
         PhyAddr(MEMORY_END).floor(),
     );
 }
 
-pub fn frame_alloc() -> Option<PhyPageNum> {
-    FRAME_ALLOCATOR.borrow_mut().alloc()
+pub fn frame_alloc() -> Option<FrameTracker> {
+    FRAME_ALLOCATOR.borrow_mut().alloc().map(FrameTracker::new)
 }
 pub fn frame_dealloc(ppn: PhyPageNum) {
     FRAME_ALLOCATOR.borrow_mut().dealloc(ppn)
