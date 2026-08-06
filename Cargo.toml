@@ -8,6 +8,7 @@ log = "*"
 riscv = "*"
 lazy_static = {version = "*", features = ["spin_no_std"]}
 bitflags = "*"
+buddy_system_allocator = "*"
 
 [build-dependencies]
 

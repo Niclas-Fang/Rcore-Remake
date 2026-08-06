@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 #![allow(dead_code)]
+#![allow(static_mut_refs)]
 
 mod batch;
 mod config;
@@ -39,6 +40,7 @@ unsafe extern "C" fn kernel_main() -> ! {
     log::debug!("This is debug info");
     log::trace!("This is a trace");
 
+    mm::init_heap();
     load_apps();
     timer::init_timer();
     run_first_task()
