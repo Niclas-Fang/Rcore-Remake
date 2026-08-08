@@ -5,7 +5,7 @@ use bitflags::bitflags;
 
 use crate::mm::{
     address::{PAGE_SIZE, PhyAddr, PhyPageNum, VirtPageNum},
-    frame_allocator::{frame_alloc, FrameTracker},
+    frame_allocator::{FrameTracker, frame_alloc},
 };
 
 bitflags! {
@@ -137,4 +137,3 @@ impl PageTable {
         (8usize << 60) | self.root_ppn.0
     }
 }
-

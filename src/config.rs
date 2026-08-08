@@ -32,7 +32,6 @@ pub const KERNEL_STACK_SIZE: usize = 4096 * 2; // 8KiB
 /// 每个应用的用户栈大小
 pub const USER_STACK_SIZE: usize = 4096; // 4KiB
 
-
 pub const MEMORY_END: usize = 0x88000000;
 
 // ─── 堆大小 ─────────────────────────────────────────

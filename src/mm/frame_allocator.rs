@@ -1,7 +1,11 @@
 use alloc::vec::Vec;
 use lazy_static::lazy_static;
 
-use crate::{config::MEMORY_END, mm::address::{PhyAddr, PhyPageNum}, sync_refcell::SyncRefCell};
+use crate::{
+    config::MEMORY_END,
+    mm::address::{PhyAddr, PhyPageNum},
+    sync_refcell::SyncRefCell,
+};
 
 pub struct FrameTracker {
     pub ppn: PhyPageNum,
@@ -73,7 +77,7 @@ pub fn init_frame_allocator() {
         fn ekernel();
     }
     FRAME_ALLOCATOR.borrow_mut().init(
-        PhyAddr(ekernel as *const () as usize ).ceil(),
+        PhyAddr(ekernel as *const () as usize).ceil(),
         PhyAddr(MEMORY_END).floor(),
     );
 }

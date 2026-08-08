@@ -1,10 +1,9 @@
 use core::ptr::copy;
 
 use crate::{
-    config::{
-        APP_SIZE, KERNEL_STACK_SIZE, MAX_NUM_APP, USER_BASE, USER_STACK_SIZE,
-    },
-    link_app, trap::TrapContext,
+    config::{APP_SIZE, KERNEL_STACK_SIZE, MAX_NUM_APP, USER_BASE, USER_STACK_SIZE},
+    link_app,
+    trap::TrapContext,
 };
 
 #[derive(Clone, Copy)]
