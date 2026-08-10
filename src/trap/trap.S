@@ -1,4 +1,4 @@
-.section .text.trap
+.section .text.trampoline
 .globl _trap_entry
 
     
@@ -10,7 +10,7 @@
     ld x\n, \n*8(sp)
 .endm
 
-    .align 2
+    .align 12
 _trap_entry:
     csrrw sp, sscratch, sp
     addi sp, sp, -34*8

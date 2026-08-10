@@ -7,11 +7,11 @@ use riscv::{
     register::satp::{self, Satp},
 };
 
-use crate::mm::{
+use crate::{config::TRAMPOLINE, mm::{
     address::{PhyPageNum, VirtAddr, VirtPageNum},
     frame_allocator::{FrameTracker, frame_alloc},
     page_table::{PTEFlags, PageTable},
-};
+}};
 
 pub enum MapType {
     Identical,
@@ -95,5 +95,13 @@ impl MemorySet {
     pub fn activate(&self) {
         unsafe { satp::write(Satp::from_bits(self.token())) };
         sfence_vma_all();
+    }
+    pub fn map_trampoline(&mut self) {
+        unsafe extern "C" {
+            static strampoline: u8;
+        }
+        let trampoline = unsafe { &strampoline as *const u8 as usize };
+        self.page_table.map(VirtPageNum(TRAMPOLINE), PhyPageNum(trampoline), PTEFlags::R | PTEFlags::U | PTEFlags::X);
+
     }
 }

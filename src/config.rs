@@ -65,3 +65,7 @@ pub const SYS_GET_TIME: usize = 169;
 
 /// 标准输出文件描述符
 pub const STD_OUTPUT: usize = 1;
+
+pub const TRAMPOLINE: usize = 0xFFFFFFFFFFFFF000;
+
+pub const TRAP_CONTEXT: usize = TRAMPOLINE - PAGE_SIZE;

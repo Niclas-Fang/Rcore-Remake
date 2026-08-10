@@ -2,24 +2,29 @@ OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
 MEMORY {
-    /* KERNEL_BASE=0x80200000, KERNEL_MEMORY_SIZE=128M — 见 src/config.rs */
     RAM (rwx) : ORIGIN = 0x80200000, LENGTH = 128M
 }
 
 SECTIONS {
     . = ORIGIN(RAM);
     skernel = .;
+    . = ALIGN(4K);
 
     stext = .;
     .text : {
         KEEP(*(.text.entry))
+        . = ALIGN(4K);
+        strampoline = .;
+        *(.text.trampoline)
+        . = ALIGN(4K);
+        etrampoline = .;
         *(.text .text.*)
     } > RAM
     . = ALIGN(4K);
     etext = .;
 
     srodata = .; 
-    .rodata : ALIGN(4K) {
+    .rodata : {
         *(.rodata .rodata.*)
         *(.srodata .srodata.*)
     } > RAM
@@ -27,7 +32,7 @@ SECTIONS {
     erodata = .;
 
     sdata = .; 
-    .data : ALIGN(4K) {
+    .data : {
         *(.data .data.*)
         *(.sdata .sdata.*)
     } > RAM
@@ -36,7 +41,7 @@ SECTIONS {
 
     
     sbss = .; 
-    .bss : ALIGN(4K) {
+    .bss : {
         *(.bss.stack)
         *(.bss .bss.*)
         *(.sbss .sbss.*)
