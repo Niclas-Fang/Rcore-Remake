@@ -1,4 +1,6 @@
 use core::range::Range;
+use lazy_static::lazy_static;
+use crate::config::MEMORY_END;
 
 use alloc::vec;
 use alloc::vec::Vec;
@@ -7,11 +9,14 @@ use riscv::{
     register::satp::{self, Satp},
 };
 
-use crate::{config::TRAMPOLINE, mm::{
-    address::{PhyPageNum, VirtAddr, VirtPageNum},
-    frame_allocator::{FrameTracker, frame_alloc},
-    page_table::{PTEFlags, PageTable},
-}};
+use crate::{
+    config::TRAMPOLINE,
+    mm::{
+        address::{PhyPageNum, VirtAddr, VirtPageNum},
+        frame_allocator::{FrameTracker, frame_alloc},
+        page_table::{PTEFlags, PageTable},
+    },
+};
 
 pub enum MapType {
     Identical,
@@ -101,7 +106,62 @@ impl MemorySet {
             static strampoline: u8;
         }
         let trampoline = unsafe { &strampoline as *const u8 as usize };
-        self.page_table.map(VirtPageNum(TRAMPOLINE), PhyPageNum(trampoline), PTEFlags::R | PTEFlags::U | PTEFlags::X);
-
+        self.page_table.map(
+            VirtPageNum(TRAMPOLINE),
+            PhyPageNum(trampoline),
+            PTEFlags::R | PTEFlags::U | PTEFlags::X,
+        );
     }
+    pub fn new_kernel() -> Self {
+        unsafe extern "C" {
+            static stext: usize;
+            static etext: usize;
+            static srodata: usize;
+            static erodata: usize;
+            static sdata: usize;
+            static edata: usize;
+            static sbss: usize;
+            static ebss: usize;
+            static ekernel: usize;
+        }
+        let mut memory_set = Self::new();
+        unsafe {
+            memory_set.map_area(
+                VirtAddr(&stext as *const usize as usize),
+                VirtAddr(&etext as *const usize as usize),
+                MapPermission::R | MapPermission::X,
+                MapType::Identical,
+            );
+            memory_set.map_area(
+                VirtAddr(&srodata as *const usize as usize),
+                VirtAddr(&erodata as *const usize as usize),
+                MapPermission::R,
+                MapType::Identical,
+            );
+            memory_set.map_area(
+                VirtAddr(&sdata as *const usize as usize),
+                VirtAddr(&edata as *const usize as usize),
+                MapPermission::R | MapPermission::W,
+                MapType::Identical,
+            );
+            memory_set.map_area(
+                VirtAddr(&sbss as *const usize as usize),
+                VirtAddr(&ebss as *const usize as usize),
+                MapPermission::R | MapPermission::W,
+                MapType::Identical,
+            );
+            memory_set.map_area(
+                VirtAddr(&ekernel as *const usize as usize),
+                VirtAddr(MEMORY_END),
+                MapPermission::R | MapPermission::W,
+                MapType::Identical,
+            );
+            memory_set.map_trampoline();
+            memory_set
+        }
+    }
+}
+
+lazy_static! {
+    pub static ref KERNEL_SPACE: MemorySet = MemorySet::new_kernel();
 }
