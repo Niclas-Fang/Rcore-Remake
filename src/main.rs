@@ -3,7 +3,7 @@
 #![allow(dead_code)]
 #![allow(static_mut_refs)]
 
-mod batch;
+//mod batch;
 mod config;
 mod console;
 mod lang_items;

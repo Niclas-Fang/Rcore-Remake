@@ -34,6 +34,8 @@ pub const USER_STACK_SIZE: usize = 4096; // 4KiB
 
 pub const MEMORY_END: usize = 0x88000000;
 
+pub const USER_BASE_VA: usize = 0x1_0000;
+
 // ─── 堆大小 ─────────────────────────────────────────
 
 pub const KERNEL_HEAP_SIZE: usize = 0x200_0000;

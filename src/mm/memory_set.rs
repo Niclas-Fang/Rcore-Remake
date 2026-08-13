@@ -1,6 +1,10 @@
+use crate::{
+    config::{MEMORY_END, PAGE_SIZE, TRAP_CONTEXT, USER_BASE_VA, USER_STACK_SIZE},
+    link_app,
+};
+use core::ptr::copy;
 use core::range::Range;
 use lazy_static::lazy_static;
-use crate::config::MEMORY_END;
 
 use alloc::vec;
 use alloc::vec::Vec;
@@ -158,6 +162,46 @@ impl MemorySet {
             );
             memory_set.map_trampoline();
             memory_set
+        }
+    }
+    pub fn from_app(app_id: usize) -> Self {
+        let mut memory_set = MemorySet::new();
+        let len = link_app::APPS[app_id].len();
+        memory_set.map_trampoline();
+        memory_set.map_area(
+            VirtAddr(USER_BASE_VA),
+            VirtAddr(USER_BASE_VA + len),
+            MapPermission::R | MapPermission::W | MapPermission::X | MapPermission::U,
+            MapType::Framed,
+        );
+        memory_set.map_area(
+            VirtAddr(TRAP_CONTEXT - USER_STACK_SIZE),
+            VirtAddr(TRAP_CONTEXT),
+            MapPermission::W | MapPermission::R | MapPermission::U,
+            MapType::Framed,
+        );
+        memory_set.map_area(
+            VirtAddr(TRAP_CONTEXT),
+            VirtAddr(TRAMPOLINE),
+            MapPermission::R | MapPermission::W,
+            MapType::Framed,
+        );
+        memory_set.copy_data(app_id);
+        memory_set
+    }
+    fn copy_data(&mut self, app_id: usize) {
+        if app_id >= link_app::NUM_APPS {
+            panic!("APP number exceeds existing numbers!")
+        }
+        let app = link_app::APPS[app_id];
+        let va_base = VirtAddr(USER_BASE_VA).floor();
+        for (i, chunk) in app.chunks(PAGE_SIZE).enumerate() {
+            let va = VirtPageNum(va_base.0 + i);
+            let pa = self
+                .page_table
+                .translate(va)
+                .expect("App text stack overflow!");
+            unsafe { copy(chunk.as_ptr(), pa.0 as *mut u8, chunk.len()) }
         }
     }
 }
