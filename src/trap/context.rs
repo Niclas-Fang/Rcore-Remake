@@ -19,6 +19,7 @@ impl TrapContext {
         entry: usize,
         sp: usize,
         kernel_satp: usize,
+        user_satp: usize,
         kernel_sp: usize,
         trap_handler: usize,
     ) -> Self {
@@ -29,7 +30,7 @@ impl TrapContext {
             sstatus,
             sepc: entry,
             kernel_satp: kernel_satp,
-            user_satp: 0, //unimplemented!
+            user_satp: user_satp,
             kernel_sp: kernel_sp,
             trap_handler: trap_handler,
         };
