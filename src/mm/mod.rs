@@ -9,3 +9,4 @@ pub use frame_allocator::init_frame_allocator;
 pub use heap_allocator::init_heap;
 pub use memory_set::KERNEL_SPACE;
 pub use memory_set::MemorySet;
+pub use memory_set::kernel_satp;

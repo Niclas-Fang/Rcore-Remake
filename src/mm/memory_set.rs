@@ -1,6 +1,7 @@
 use crate::{
     config::{MEMORY_END, PAGE_SIZE, TRAP_CONTEXT, USER_BASE_VA, USER_STACK_SIZE},
     link_app,
+    sync_refcell::SyncRefCell,
 };
 use core::ptr::copy;
 use core::range::Range;
@@ -207,8 +208,23 @@ impl MemorySet {
     pub fn translate(&self, vpn: VirtPageNum) -> Option<PhyPageNum> {
         self.page_table.translate(vpn)
     }
+    pub fn remap_trap_context(&mut self, trap_cx_ppn: PhyPageNum) {
+        self.page_table.unmap(VirtPageNum(TRAP_CONTEXT));
+        self.page_table.map(
+            VirtPageNum(TRAP_CONTEXT),
+            trap_cx_ppn,
+            PTEFlags::R | PTEFlags::W,
+        );
+    }
 }
 
 lazy_static! {
-    pub static ref KERNEL_SPACE: MemorySet = MemorySet::new_kernel();
+    pub static ref KERNEL_SPACE: SyncRefCell<MemorySet> = {
+        let kernel = MemorySet::new_kernel();
+        unsafe { SyncRefCell::new(kernel) }
+    };
+}
+
+pub fn kernel_satp() -> usize {
+    KERNEL_SPACE.borrow().token()
 }

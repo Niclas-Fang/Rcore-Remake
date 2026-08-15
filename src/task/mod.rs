@@ -1,10 +1,15 @@
 use core::array;
 
 use crate::{
-    config::{TRAP_CONTEXT, USER_BASE_VA}, loader::kernel_sp, mm::{KERNEL_SPACE, MemorySet, PhyPageNum, VirtAddr}, sync_refcell::SyncRefCell, task::{
+    config::{TRAP_CONTEXT, USER_BASE_VA},
+    loader::kernel_sp,
+    mm::{KERNEL_SPACE, MemorySet, PhyPageNum, VirtAddr, kernel_satp},
+    sync_refcell::SyncRefCell,
+    task::{
         Status::{Exit, Running},
         switch::__switch,
-    }, trap::{TrapContext, trap_handler},
+    },
+    trap::{TrapContext, trap_handler},
 };
 pub use context::TaskContext;
 use lazy_static::lazy_static;
@@ -77,7 +82,16 @@ impl Task {
             memory_set: memory_set,
         };
         let cx_ptr = task.trap_cx_ppn.get_bytes_array().as_mut_ptr() as *mut TrapContext;
-        unsafe { cx_ptr.write(TrapContext::init(USER_BASE_VA, TRAP_CONTEXT, KERNEL_SPACE.token(), task.page_table_token, kernel_sp(app_id), trap_handler as *const() as usize)) };
+        unsafe {
+            cx_ptr.write(TrapContext::init(
+                USER_BASE_VA,
+                TRAP_CONTEXT,
+                kernel_satp(),
+                task.page_table_token,
+                kernel_sp(app_id),
+                trap_handler as *const () as usize,
+            ))
+        };
         task
     }
 }
@@ -96,13 +110,17 @@ impl TaskManager {
             &mut tasks[idx].context as *mut TaskContext
         };
 
-        let next_context = {
+        let (next_context, ppn) = {
             let tasks = self.tasks.borrow();
-            &tasks[next_task].context as *const TaskContext
+            (
+                &tasks[next_task].context as *const TaskContext,
+                tasks[next_task].trap_cx_ppn,
+            )
         };
 
         *self.running_task.borrow_mut() = next_task;
         self.tasks.borrow_mut()[next_task].status = Running;
+        KERNEL_SPACE.borrow_mut().remap_trap_context(ppn);
         unsafe { __switch(current_context, next_context) };
     }
     fn find_next_task(&self) -> usize {
@@ -123,6 +141,9 @@ impl TaskManager {
             let mut tasks = self.tasks.borrow_mut();
             tasks[0].status = Running;
             first_cx_ptr = &tasks[0].context as *const TaskContext;
+            KERNEL_SPACE
+                .borrow_mut()
+                .remap_trap_context(tasks[0].trap_cx_ppn);
         }
         let mut place_holder = TaskContext::init();
         unsafe {
