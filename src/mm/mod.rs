@@ -4,6 +4,7 @@ mod heap_allocator;
 mod memory_set;
 mod page_table;
 
+pub use address::{PhyPageNum, VirtAddr};
 pub use frame_allocator::init_frame_allocator;
 pub use heap_allocator::init_heap;
 pub use memory_set::KERNEL_SPACE;

@@ -204,6 +204,9 @@ impl MemorySet {
             unsafe { copy(chunk.as_ptr(), pa.0 as *mut u8, chunk.len()) }
         }
     }
+    pub fn translate(&self, vpn: VirtPageNum) -> Option<PhyPageNum> {
+        self.page_table.translate(vpn)
+    }
 }
 
 lazy_static! {

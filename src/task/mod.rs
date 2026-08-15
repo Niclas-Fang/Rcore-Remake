@@ -1,25 +1,28 @@
+use core::array;
+
 use crate::{
-    sync_refcell::SyncRefCell,
-    task::{
+    config::{TRAP_CONTEXT, USER_BASE_VA}, loader::kernel_sp, mm::{KERNEL_SPACE, MemorySet, PhyPageNum, VirtAddr}, sync_refcell::SyncRefCell, task::{
         Status::{Exit, Running},
         switch::__switch,
-    },
+    }, trap::{TrapContext, trap_handler},
 };
 pub use context::TaskContext;
 use lazy_static::lazy_static;
 
 use crate::{
     config::MAX_NUM_APP,
-    loader::{init_app_cx, num_apps},
+    loader::num_apps,
     sbi::shutdown,
     task::Status::{Ready, Suspended},
 };
 mod context;
 mod switch;
-#[derive(Clone, Copy)]
 struct Task {
     status: Status,
     context: TaskContext,
+    memory_set: MemorySet,
+    page_table_token: usize,
+    trap_cx_ppn: PhyPageNum,
 }
 #[derive(Clone, Copy, PartialEq)]
 enum Status {
@@ -61,7 +64,23 @@ pub fn suspend_current_and_run_next() {
 pub fn run_first_task() -> ! {
     TASK_MANAGER.run_first_task()
 }
-
+impl Task {
+    pub fn new(app_id: usize) -> Self {
+        let memory_set = MemorySet::from_app(app_id);
+        let task = Task {
+            context: TaskContext::goto_restore(TRAP_CONTEXT),
+            status: Status::Ready,
+            page_table_token: memory_set.token(),
+            trap_cx_ppn: memory_set
+                .translate(VirtAddr(TRAP_CONTEXT).floor())
+                .unwrap(),
+            memory_set: memory_set,
+        };
+        let cx_ptr = task.trap_cx_ppn.get_bytes_array().as_mut_ptr() as *mut TrapContext;
+        unsafe { cx_ptr.write(TrapContext::init(USER_BASE_VA, TRAP_CONTEXT, KERNEL_SPACE.token(), task.page_table_token, kernel_sp(app_id), trap_handler as *const() as usize)) };
+        task
+    }
+}
 impl TaskManager {
     fn suspend_current(&self) {
         self.tasks.borrow_mut()[*self.running_task.borrow()].status = Suspended;
@@ -71,7 +90,6 @@ impl TaskManager {
     }
     fn run_next_task(&self) {
         let next_task = self.find_next_task();
-
         let current_context = {
             let mut tasks = self.tasks.borrow_mut();
             let idx = *self.running_task.borrow();
@@ -116,14 +134,7 @@ impl TaskManager {
 lazy_static! {
     pub static ref TASK_MANAGER: TaskManager = {
         let app_num = num_apps();
-        let mut tasks = [Task {
-            context: TaskContext::init(),
-            status: Status::Ready,
-        }; MAX_NUM_APP];
-        for (i, task) in tasks.iter_mut().enumerate() {
-            task.context = TaskContext::goto_restore(init_app_cx(i));
-            task.status = Status::Ready;
-        }
+        let tasks = array::from_fn(|i| Task::new(i));
         unsafe {
             TaskManager {
                 app_num,
