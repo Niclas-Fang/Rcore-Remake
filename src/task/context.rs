@@ -1,3 +1,5 @@
+use crate::config::TRAMPOLINE;
+
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct TaskContext {
@@ -17,9 +19,10 @@ impl TaskContext {
     pub fn goto_restore(sp: usize) -> Self {
         unsafe extern "C" {
             fn __restore(context_address: usize) -> !;
+            static strampoline: usize;
         }
         Self {
-            ra: __restore as *const () as usize,
+            ra: __restore as *const () as usize - unsafe { &strampoline as *const usize as usize } + TRAMPOLINE,
             sp,
             s: [0; 12],
         }

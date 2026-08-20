@@ -13,7 +13,6 @@
     .align 12
 _trap_entry:
     csrrw sp, sscratch, sp
-    addi sp, sp, -34*8
 
     sd x1, 1*8(sp)
     # skip x2
@@ -32,18 +31,28 @@ _trap_entry:
     sd t0, 32*8(sp)
     sd t1, 33*8(sp)
     sd t2, 2*8(sp)
-  
+
+    ld t0, 34*8(sp)
+    ld t1, 37*8(sp)
+
     mv a0, sp
-    call trap_handler
+    ld sp, 36*8(sp)
+
+    csrw satp, t0
+    sfence.vma
+
+    la ra, __restore
+    jr t1
     
 .globl __restore
 __restore:
+    mv sp, a0
+    csrw sscratch, a0
+
     ld t0,32*8(sp)
     ld t1, 33*8(sp)
-    ld t2, 2*8(sp)
     csrw sstatus, t0
     csrw sepc, t1
-    csrw sscratch, t2
 
     ld x1, 1*8(sp)
     ld x3, 3*8(sp)
@@ -53,7 +62,9 @@ __restore:
         .set n, n+1
     .endr
 
-    addi sp, sp, 34*8
-    
-    csrrw sp, sscratch, sp
+    ld t0, 35*8(sp)
+    csrw satp, t0
+    sfence.vma
+
+    ld sp, 2*8(sp)
     sret
