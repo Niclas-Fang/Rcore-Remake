@@ -33,6 +33,8 @@ fn main() -> std::io::Result<()> {
         );
     }
     for bin in &bins {
+        // 只在 user 产物变化时重跑 build.rs（避免每次编译都重新生成 .bin 触发内核重编）
+        println!("cargo:rerun-if-changed={}", bin.to_str().unwrap());
         let path_elf = bin.to_str().unwrap();
         let path_bin = format!("{path_elf}.bin");
         std::process::Command::new("rust-objcopy")
