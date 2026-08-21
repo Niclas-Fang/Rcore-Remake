@@ -10,3 +10,4 @@ pub use heap_allocator::init_heap;
 pub use memory_set::KERNEL_SPACE;
 pub use memory_set::MemorySet;
 pub use memory_set::kernel_satp;
+pub use page_table::PageTable;

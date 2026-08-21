@@ -4,7 +4,6 @@ mod process;
 use crate::config::{SYS_EXIT, SYS_GET_TIME, SYS_WRITE, SYS_YIELD};
 
 pub fn sys_call(which: usize, args: [usize; 3]) -> usize {
-    //println!("call from user of {} with args {:?}", which, args);
     match which {
         SYS_WRITE => fd::sys_write(args[0], args[1] as *const u8, args[2]) as usize,
         SYS_EXIT => {

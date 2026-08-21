@@ -12,15 +12,6 @@ pub const KERNEL_BASE: usize = 0x80200000;
 /// 内核可用内存大小 (linker.ld: LENGTH)
 pub const KERNEL_MEMORY_SIZE: usize = 128 * 1024 * 1024; // 128M
 
-/// 用户程序加载基地址 (user/linker.ld: ORIGIN)
-pub const USER_BASE: usize = 0x80400000;
-
-/// 用户程序栈顶地址（legacy batch 模式使用）
-pub const USER_STACK_TOP: usize = 0x84400000;
-
-/// 每个用户程序占用的地址空间大小
-pub const APP_SIZE: usize = 0x400000; // 4MB
-
 /// 最大应用数量
 pub const MAX_NUM_APP: usize = 16;
 

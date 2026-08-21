@@ -1,6 +1,7 @@
 use crate::{
     config::{MEMORY_END, PAGE_SIZE, TRAP_CONTEXT, USER_BASE_VA, USER_STACK_SIZE},
     link_app,
+    mm::address::PhyAddr,
     sync_refcell::SyncRefCell,
 };
 use core::ptr::copy;
@@ -112,9 +113,9 @@ impl MemorySet {
         }
         let trampoline = unsafe { &strampoline as *const u8 as usize };
         self.page_table.map(
-            VirtPageNum(TRAMPOLINE),
-            PhyPageNum(trampoline),
-            PTEFlags::R | PTEFlags::U | PTEFlags::X,
+            VirtAddr(TRAMPOLINE).floor(),
+            PhyAddr(trampoline).ceil(),
+            PTEFlags::R | PTEFlags::X,
         );
     }
     pub fn new_kernel() -> Self {
@@ -198,23 +199,26 @@ impl MemorySet {
         let va_base = VirtAddr(USER_BASE_VA).floor();
         for (i, chunk) in app.chunks(PAGE_SIZE).enumerate() {
             let va = VirtPageNum(va_base.0 + i);
-            let pa = self
+            let ppn = self
                 .page_table
                 .translate(va)
                 .expect("App text stack overflow!");
-            unsafe { copy(chunk.as_ptr(), pa.0 as *mut u8, chunk.len()) }
+            unsafe { copy(chunk.as_ptr(), (ppn.0 << 12) as *mut u8, chunk.len()) }
         }
     }
     pub fn translate(&self, vpn: VirtPageNum) -> Option<PhyPageNum> {
         self.page_table.translate(vpn)
     }
     pub fn remap_trap_context(&mut self, trap_cx_ppn: PhyPageNum) {
-        self.page_table.unmap(VirtPageNum(TRAP_CONTEXT));
+        self.page_table.unmap(VirtAddr(TRAP_CONTEXT).floor());
         self.page_table.map(
-            VirtPageNum(TRAP_CONTEXT),
+            VirtAddr(TRAP_CONTEXT).floor(),
             trap_cx_ppn,
             PTEFlags::R | PTEFlags::W,
         );
+        // 关键：TLB 里可能残留旧映射（上一个任务的 trap_cx 页），
+        // 不刷的话 __restore 会读到旧任务的上下文，sret 回旧代码。
+        sfence_vma_all();
     }
 }
 

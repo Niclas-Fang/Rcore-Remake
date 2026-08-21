@@ -1,5 +1,3 @@
-use core::array;
-
 use crate::{
     config::{TRAP_CONTEXT, USER_BASE_VA},
     loader::kernel_sp,
@@ -11,11 +9,11 @@ use crate::{
     },
     trap::{TrapContext, trap_handler},
 };
+use alloc::vec::Vec;
 pub use context::TaskContext;
 use lazy_static::lazy_static;
 
 use crate::{
-    config::MAX_NUM_APP,
     loader::num_apps,
     sbi::shutdown,
     task::Status::{Ready, Suspended},
@@ -39,8 +37,7 @@ enum Status {
 
 pub struct TaskManager {
     running_task: SyncRefCell<usize>,
-    tasks: SyncRefCell<[Task; MAX_NUM_APP]>,
-    app_num: usize,
+    tasks: SyncRefCell<Vec<Task>>,
 }
 
 fn suspend_current() {
@@ -69,6 +66,11 @@ pub fn suspend_current_and_run_next() {
 pub fn run_first_task() -> ! {
     TASK_MANAGER.run_first_task()
 }
+
+/// 当前运行任务的用户页表 token（供 syscall 翻译用户地址用）
+pub fn current_user_token() -> usize {
+    TASK_MANAGER.current_token()
+}
 impl Task {
     pub fn new(app_id: usize) -> Self {
         let memory_set = MemorySet::from_app(app_id);
@@ -96,6 +98,9 @@ impl Task {
     }
 }
 impl TaskManager {
+    fn current_token(&self) -> usize {
+        self.tasks.borrow()[*self.running_task.borrow()].page_table_token
+    }
     fn suspend_current(&self) {
         self.tasks.borrow_mut()[*self.running_task.borrow()].status = Suspended;
     }
@@ -126,8 +131,9 @@ impl TaskManager {
     fn find_next_task(&self) -> usize {
         let running = *self.running_task.borrow();
         let tasks = self.tasks.borrow();
-        for i in 1..self.app_num + 1 {
-            let idx = (running + i) % self.app_num;
+        let app_num = self.tasks.borrow().len();
+        for i in 1..app_num + 1 {
+            let idx = (running + i) % app_num;
             let status = tasks[idx].status;
             if status == Ready || status == Suspended {
                 return idx;
@@ -155,10 +161,9 @@ impl TaskManager {
 lazy_static! {
     pub static ref TASK_MANAGER: TaskManager = {
         let app_num = num_apps();
-        let tasks = array::from_fn(|i| Task::new(i));
+        let tasks: Vec<_> = (0..app_num).map(Task::new).collect();
         unsafe {
             TaskManager {
-                app_num,
                 tasks: SyncRefCell::new(tasks),
                 running_task: SyncRefCell::new(0),
             }

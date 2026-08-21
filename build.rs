@@ -3,13 +3,22 @@ use std::fs::{read_dir, write};
 const USER_BIN_DIR: &str = "./target/riscv64gc-unknown-none-elf/release";
 // use std::fs::{read_dir,File};
 fn main() -> std::io::Result<()> {
+    // 内核链接脚本（绝对路径，避免与 user 包的 rustflags 冲突）
+    println!(
+        "cargo:rustc-link-arg=-T{}/linker.ld",
+        std::env::var("CARGO_MANIFEST_DIR").unwrap()
+    );
+    // 内核自身产物名（cargo 会把内核二进制写到同一个 release 目录）
+    let kernel_name = std::env::var("CARGO_PKG_NAME").unwrap_or_default();
     let bins: Vec<_> = read_dir(USER_BIN_DIR)?
         .filter_map(|entry| {
             let entry = entry.ok()?;
             let path = entry.path();
+            let name = path.file_name()?.to_str()?.to_string();
             if path.extension().is_none()
                 && path.is_file()
-                && !path.file_name()?.to_str()?.starts_with(".")
+                && !name.starts_with(".")
+                && name != kernel_name
             {
                 Some(path)
             } else {
@@ -17,6 +26,12 @@ fn main() -> std::io::Result<()> {
             }
         })
         .collect();
+    if bins.is_empty() {
+        println!(
+            "cargo:warning=no user ELF found in {USER_BIN_DIR}, \
+             run `cargo build -p user_lib --release` first!"
+        );
+    }
     for bin in &bins {
         let path_elf = bin.to_str().unwrap();
         let path_bin = format!("{path_elf}.bin");

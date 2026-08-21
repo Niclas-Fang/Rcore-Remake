@@ -9,6 +9,7 @@ use riscv::{
 };
 
 use crate::{
+    config::TRAMPOLINE,
     println, syscall,
     task::{exit_current_and_run_next, suspend_current_and_run_next},
     timer::set_trigger,
@@ -17,10 +18,7 @@ use crate::{
 global_asm!(include_str!("trap.S"));
 
 pub fn init() {
-    unsafe extern "C" {
-        fn _trap_entry();
-    }
-    let vec = stvec::Stvec::new(_trap_entry as *const () as usize, TrapMode::Direct);
+    let vec = stvec::Stvec::new(TRAMPOLINE, TrapMode::Direct);
     unsafe {
         stvec::write(vec);
     }
@@ -68,13 +66,4 @@ pub fn trap_handler(context: &mut TrapContext) -> &mut TrapContext {
         },
     }
     context
-}
-
-pub fn goto_user(context: TrapContext) -> ! {
-    unsafe extern "C" {
-        fn __restore(context_address: usize) -> !;
-    }
-    unsafe {
-        __restore(&context as *const TrapContext as usize);
-    }
 }

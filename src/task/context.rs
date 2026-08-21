@@ -22,7 +22,8 @@ impl TaskContext {
             static strampoline: usize;
         }
         Self {
-            ra: __restore as *const () as usize - unsafe { &strampoline as *const usize as usize } + TRAMPOLINE,
+            ra: __restore as *const () as usize - unsafe { &strampoline as *const usize as usize }
+                + TRAMPOLINE,
             sp,
             s: [0; 12],
         }
