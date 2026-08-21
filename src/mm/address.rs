@@ -27,7 +27,7 @@ impl PhyAddr {
     }
 }
 impl VirtAddr {
-    fn offset(&self) -> usize {
+    pub fn page_offset(&self) -> usize {
         self.0 & (PAGE_SIZE - 1)
     }
     /// Get the (floor) virtual page number
@@ -73,7 +73,7 @@ impl From<PhyPageNum> for PhyAddr {
 
 impl From<VirtAddr> for VirtPageNum {
     fn from(value: VirtAddr) -> Self {
-        assert!(value.offset() == 0);
+        assert!(value.page_offset() == 0);
         Self(value.0 >> 12)
     }
 }
