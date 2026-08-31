@@ -31,6 +31,7 @@ unsafe extern "C" {
 unsafe extern "C" fn kernel_main() -> ! {
     logging::init();
     println!("Hello world from main!");
+    loader::list_apps();
     mm::init_heap();
     mm::init_frame_allocator();
     KERNEL_SPACE.borrow().activate();

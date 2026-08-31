@@ -1,9 +1,4 @@
-use crate::{
-    config::STD_OUTPUT,
-    mm::PageTable,
-    sbi::putchar,
-    task::current_user_token,
-};
+use crate::{config::STD_OUTPUT, mm::PageTable, sbi::putchar, task::current_user_token};
 
 pub fn sys_write(fd: usize, buffer: *const u8, len: usize) -> isize {
     match fd {
