@@ -220,6 +220,15 @@ impl MemorySet {
         // 不刷的话 __restore 会读到旧任务的上下文，sret 回旧代码。
         sfence_vma_all();
     }
+    pub fn remove_area(&mut self, start_vpn: VirtPageNum) {
+        let index = self
+            .areas
+            .iter()
+            .position(|x| x.vpn_range.start == start_vpn)
+            .expect("Cannot find map area with given vpn {pid}!");
+        self.areas[index].unmap(&mut self.page_table);
+        self.areas.remove(index);
+    }
 }
 
 lazy_static! {

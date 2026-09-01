@@ -19,6 +19,7 @@ use crate::{
     task::Status::{Ready, Suspended},
 };
 mod context;
+mod pid;
 mod switch;
 struct Task {
     status: Status,
