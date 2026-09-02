@@ -1,5 +1,5 @@
 use crate::{
-    config::{KERNEL_STACK_SIZE, PAGE_SIZE, TRAMPOLINE},
+    config::{KERNEL_STACK_SIZE, PAGE_SIZE, TRAP_CONTEXT},
     mm::{KERNEL_SPACE, MapPermission, MapType, VirtAddr},
     sync_refcell::SyncRefCell,
 };
@@ -82,7 +82,7 @@ pub fn pid_alloc() -> PidHandle {
 }
 
 pub fn kernel_stack_range(pid: usize) -> (usize, usize) {
-    let top = TRAMPOLINE - pid * (KERNEL_STACK_SIZE + PAGE_SIZE);
+    let top = TRAP_CONTEXT - pid * (KERNEL_STACK_SIZE + PAGE_SIZE);
     let bottom = top - KERNEL_STACK_SIZE;
     (bottom, top)
 }
