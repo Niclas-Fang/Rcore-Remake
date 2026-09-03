@@ -18,7 +18,6 @@ mod timer;
 mod trap;
 use core::arch::global_asm;
 extern crate alloc;
-use crate::{mm::KERNEL_SPACE, task::run_first_task};
 
 global_asm!(include_str!("entry.S"));
 
@@ -34,7 +33,7 @@ unsafe extern "C" fn kernel_main() -> ! {
     loader::list_apps();
     mm::init_heap();
     mm::init_frame_allocator();
-    KERNEL_SPACE.borrow().activate();
+    mm::activate();
     trap::init();
     timer::init_timer();
     task::run_tasks()

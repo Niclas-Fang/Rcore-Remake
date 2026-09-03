@@ -1,6 +1,6 @@
 use crate::{
     config::{KERNEL_STACK_SIZE, PAGE_SIZE, TRAP_CONTEXT},
-    mm::{KERNEL_SPACE, MapPermission, MapType, VirtAddr},
+    mm::{MapPermission, MapType, VirtAddr, map_kernel_area, remove_area},
     sync_refcell::SyncRefCell,
 };
 use alloc::vec::Vec;
@@ -53,7 +53,7 @@ pub struct KernelStack {
 impl KernelStack {
     pub fn new(pid: usize) -> Self {
         let (bottom, top) = kernel_stack_range(pid);
-        KERNEL_SPACE.borrow_mut().map_area(
+        map_kernel_area(
             VirtAddr(bottom),
             VirtAddr(top),
             MapPermission::R | MapPermission::W,
@@ -72,9 +72,7 @@ impl KernelStack {
 }
 impl Drop for KernelStack {
     fn drop(&mut self) {
-        KERNEL_SPACE
-            .borrow_mut()
-            .remove_area(VirtAddr(self.bottom()).floor());
+        remove_area(VirtAddr(self.bottom()).floor());
     }
 }
 pub fn pid_alloc() -> PidHandle {
