@@ -1,18 +1,13 @@
-use crate::{
-    loader::num_apps,
-    mm::KERNEL_SPACE,
-    sbi::shutdown,
-    sync_refcell::SyncRefCell,
+use super::{
+    TaskContext,
+    switch::__switch,
     task::{
-        TaskContext,
-        switch::__switch,
-        task::{
-            self,
-            Status::{Exit, Ready, Running, Suspended},
-            TaskControlBlock,
-        },
+        self,
+        Status::{Exit, Ready, Running, Suspended},
+        TaskControlBlock,
     },
 };
+use crate::{loader::num_apps, mm::KERNEL_SPACE, sbi::shutdown, sync_refcell::SyncRefCell};
 use alloc::{sync::Arc, vec::Vec};
 use lazy_static::lazy_static;
 

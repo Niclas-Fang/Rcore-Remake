@@ -1,18 +1,17 @@
-use crate::{task::vec, trap::TrapContext};
-use alloc::{
-    sync::{Arc, Weak},
-    vec::Vec,
+use super::{
+    TaskContext,
+    pid::{self, KernelStack, PidHandle},
 };
-
 use crate::{
     config::{TRAP_CONTEXT, USER_BASE_VA},
     mm::{MemorySet, PhyPageNum, VirtAddr, kernel_satp},
     sync_refcell::SyncRefCell,
-    task::{
-        TaskContext,
-        pid::{self, KernelStack, PidHandle},
-    },
-    trap::trap_handler,
+    trap::{TrapContext, trap_handler},
+};
+use alloc::vec;
+use alloc::{
+    sync::{Arc, Weak},
+    vec::Vec,
 };
 
 pub struct TaskControlBlockInner {

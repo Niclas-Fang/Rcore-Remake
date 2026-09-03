@@ -1,6 +1,5 @@
-use crate::task::manager::{TASK_MANAGER, exit_current, run_next_task, suspend_current};
-use alloc::vec;
 pub use context::TaskContext;
+use manager::{TASK_MANAGER, exit_current, run_next_task, suspend_current};
 
 mod context;
 mod manager;
