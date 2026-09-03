@@ -22,7 +22,7 @@ pub struct TaskControlBlockInner {
     pub trap_cx_ppn: PhyPageNum,
     parent: Option<Weak<TaskControlBlock>>,
     children: Vec<Arc<TaskControlBlock>>,
-    exit_code: i32,
+    pub exit_code: i32,
     base_size: usize,
 }
 pub struct TaskControlBlock {

@@ -13,13 +13,14 @@ mod processor;
 mod switch;
 mod task;
 
-pub fn exit_current_and_run_next(_code: i32) -> ! {
+pub fn exit_current_and_run_next(code: i32) -> ! {
     let task = take_current_task().unwrap();
     let mut lock = task.inner.borrow_mut();
     lock.status = Zombie;
-    let cx = &mut lock.context as *mut _;
+    lock.exit_code = code;
     drop(lock);
-    schedule(cx);
+    let mut cx = TaskContext::init();
+    schedule(&mut cx as *mut _);
     unreachable!();
 }
 
