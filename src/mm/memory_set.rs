@@ -241,3 +241,15 @@ lazy_static! {
 pub fn kernel_satp() -> usize {
     KERNEL_SPACE.borrow().token()
 }
+pub fn remap_trap_context(trap_cx_ppn: PhyPageNum) {
+    KERNEL_SPACE.borrow_mut().remap_trap_context(trap_cx_ppn);
+}
+pub fn map_kernel_area(start: VirtAddr, end: VirtAddr, perm: MapPermission, type_: MapType) {
+    KERNEL_SPACE.borrow_mut().map_area(start, end, perm, type_);
+}
+pub fn activate() {
+    KERNEL_SPACE.borrow().activate();
+}
+pub fn remove_area(start_vpn: VirtPageNum) {
+    KERNEL_SPACE.borrow_mut().remove_area(start_vpn);
+}

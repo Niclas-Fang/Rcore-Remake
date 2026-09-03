@@ -37,11 +37,11 @@ pub fn trap_handler(context: &mut TrapContext) -> &mut TrapContext {
             }
             Ok(Exception::StoreFault) | Ok(Exception::StorePageFault) => {
                 println!("[kernel] PageFault in application, kernel killed it.");
-                exit_current_and_run_next()
+                exit_current_and_run_next(1)
             }
             Ok(Exception::IllegalInstruction) => {
                 println!("[kernel] IllegalInstruction in application, kernel killed it.");
-                exit_current_and_run_next()
+                exit_current_and_run_next(2)
             }
             _ => {
                 panic!(

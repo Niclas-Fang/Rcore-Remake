@@ -34,8 +34,7 @@ pub struct TaskControlBlock {
 pub enum Status {
     Ready,
     Running,
-    Suspended,
-    Exit,
+    Zombie,
 }
 
 impl TaskControlBlock {

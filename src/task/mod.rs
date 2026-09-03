@@ -1,27 +1,38 @@
+use crate::task::{
+    manager::add_task,
+    processor::{schedule, take_current_task, token},
+    task::Status::{Ready, Zombie},
+};
 pub use context::TaskContext;
-use manager::{TASK_MANAGER, exit_current, run_next_task, suspend_current};
+pub use processor::run_tasks;
 
 mod context;
 mod manager;
 mod pid;
+mod processor;
 mod switch;
 mod task;
-pub fn exit_current_and_run_next() -> ! {
-    exit_current();
-    run_next_task();
+
+pub fn exit_current_and_run_next(_code: i32) -> ! {
+    let task = take_current_task().unwrap();
+    let mut lock = task.inner.borrow_mut();
+    lock.status = Zombie;
+    let cx = &mut lock.context as *mut _;
+    drop(lock);
+    schedule(cx);
     unreachable!();
 }
 
 pub fn suspend_current_and_run_next() {
-    suspend_current();
-    run_next_task();
+    let task = take_current_task().unwrap();
+    let mut lock = task.inner.borrow_mut();
+    lock.status = Ready;
+    let cx = &mut lock.context as *mut _;
+    drop(lock);
+    add_task(task);
+    schedule(cx);
 }
 
-pub fn run_first_task() -> ! {
-    TASK_MANAGER.run_first_task()
-}
-
-/// 当前运行任务的用户页表 token（供 syscall 翻译用户地址用）
 pub fn current_user_token() -> usize {
-    TASK_MANAGER.current_token()
+    token().expect("There is no task running!")
 }

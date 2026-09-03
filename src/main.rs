@@ -37,5 +37,5 @@ unsafe extern "C" fn kernel_main() -> ! {
     KERNEL_SPACE.borrow().activate();
     trap::init();
     timer::init_timer();
-    run_first_task()
+    task::run_tasks()
 }
