@@ -15,6 +15,7 @@ mod task;
 
 pub fn exit_current_and_run_next(code: i32) -> ! {
     let task = take_current_task().unwrap();
+    // task未drop, 稍后防泄漏
     let mut lock = task.inner.borrow_mut();
     lock.status = Zombie;
     lock.exit_code = code;

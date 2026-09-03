@@ -15,7 +15,7 @@ use crate::{
     timer::set_trigger,
 };
 
-global_asm!(include_str!("trap.S"));
+global_asm!(include_str!("trap/trap.S"));
 
 pub fn init() {
     let vec = stvec::Stvec::new(TRAMPOLINE, TrapMode::Direct);
