@@ -4,9 +4,11 @@ use crate::task::{
     task::Status::{Ready, Zombie},
 };
 pub use context::TaskContext;
+pub use init::add_initproc;
 pub use processor::run_tasks;
 
 mod context;
+mod init;
 mod manager;
 mod pid;
 mod processor;

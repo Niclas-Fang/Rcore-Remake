@@ -1,5 +1,5 @@
 use super::task::{self, TaskControlBlock};
-use crate::{loader::num_apps, sync_refcell::SyncRefCell};
+use crate::sync_refcell::SyncRefCell;
 use alloc::{collections::VecDeque, sync::Arc};
 use lazy_static::lazy_static;
 
@@ -23,11 +23,12 @@ pub fn fetch_task() -> Option<Arc<TaskControlBlock>> {
 }
 lazy_static! {
     pub static ref TASK_MANAGER: SyncRefCell<TaskManager> = {
-        let app_num = num_apps();
-        let tasks: VecDeque<_> = (0..app_num)
-            .map(TaskControlBlock::new)
-            .map(Arc::new)
-            .collect();
-        unsafe { SyncRefCell::new(TaskManager { ready_queue: tasks }) }
+        // let app_num = num_apps();
+        // let tasks: VecDeque<_> = (0..app_num)
+        //     .map(TaskControlBlock::new)
+        //     .map(Arc::new)
+        //     .collect();
+        // unsafe { SyncRefCell::new(TaskManager { ready_queue: tasks }) }
+        unsafe { SyncRefCell::new(TaskManager{ready_queue: VecDeque::new()}) }
     };
 }

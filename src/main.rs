@@ -36,5 +36,6 @@ unsafe extern "C" fn kernel_main() -> ! {
     mm::activate();
     trap::init();
     timer::init_timer();
+    task::add_initproc();
     task::run_tasks()
 }
