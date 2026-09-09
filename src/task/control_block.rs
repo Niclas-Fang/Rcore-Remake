@@ -51,7 +51,7 @@ impl TaskControlBlock {
             trap_cx_ppn: memory_set
                 .translate(VirtAddr(TRAP_CONTEXT).floor())
                 .unwrap(),
-            memory_set: memory_set,
+            memory_set,
             parent: None,
             children: vec![],
             base_size: USER_BASE_VA,
@@ -81,27 +81,27 @@ impl TaskControlBlock {
             .unwrap();
         let pid = pid_alloc();
         let kernel_stack = KernelStack::new(pid.0);
-        let token = memory_set.token();
+        let page_table_token = memory_set.token();
         let trap_cx = unsafe { ((trap_cx_ppn.0 << 12) as *mut TrapContext).as_mut_unchecked() };
         trap_cx.kernel_sp = kernel_stack.sp();
         trap_cx.x[10] = 0;
-        trap_cx.user_satp = token;
+        trap_cx.user_satp = page_table_token;
 
         let inner = TaskControlBlockInner {
             context: TaskContext::goto_restore(TRAP_CONTEXT),
             status: Status::Ready,
             parent: Some(Arc::downgrade(self)),
-            memory_set: memory_set,
-            page_table_token: token,
-            trap_cx_ppn: trap_cx_ppn,
+            memory_set,
+            page_table_token,
+            trap_cx_ppn,
             children: vec![],
             exit_code: 0,
             base_size: USER_BASE_VA,
         };
         let child = unsafe {
             Arc::new(TaskControlBlock {
-                pid: pid,
-                kernel_stack: kernel_stack,
+                pid,
+                kernel_stack,
                 inner: SyncRefCell::new(inner),
             })
         };

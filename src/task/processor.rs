@@ -7,9 +7,9 @@ use crate::{
     sync_refcell::SyncRefCell,
     task::{
         TaskContext,
+        control_block::{Status::Running, TaskControlBlock},
         manager::fetch_task,
         switch::__switch,
-        task::{Status::Running, TaskControlBlock},
     },
 };
 

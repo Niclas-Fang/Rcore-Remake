@@ -4,17 +4,17 @@ pub use manager::add_task;
 pub use processor::current_task;
 pub use processor::run_tasks;
 use {
+    control_block::Status::{Ready, Zombie},
     processor::{schedule, take_current_task, token},
-    task::Status::{Ready, Zombie},
 };
 
 mod context;
+mod control_block;
 mod init;
 mod manager;
 mod pid;
 mod processor;
 mod switch;
-mod task;
 
 pub fn exit_current_and_run_next(code: i32) -> ! {
     let task = take_current_task().unwrap();

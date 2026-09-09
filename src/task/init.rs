@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 
 use crate::{
     loader::get_app_data_by_name,
-    task::{manager::add_task, task::TaskControlBlock},
+    task::{control_block::TaskControlBlock, manager::add_task},
 };
 
 lazy_static! {

@@ -30,10 +30,10 @@ impl TrapContext {
             x: [0; 32],
             sstatus,
             sepc: entry,
-            kernel_satp: kernel_satp,
-            user_satp: user_satp,
-            kernel_sp: kernel_sp,
-            trap_handler: trap_handler,
+            kernel_satp,
+            user_satp,
+            kernel_sp,
+            trap_handler,
         };
         context.set_sp(sp);
         context

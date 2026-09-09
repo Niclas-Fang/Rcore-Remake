@@ -1,10 +1,10 @@
-use super::task::{self, TaskControlBlock};
+use super::control_block::{self, TaskControlBlock};
 use crate::sync_refcell::SyncRefCell;
 use alloc::{collections::VecDeque, sync::Arc};
 use lazy_static::lazy_static;
 
 pub struct TaskManager {
-    ready_queue: VecDeque<Arc<task::TaskControlBlock>>,
+    ready_queue: VecDeque<Arc<control_block::TaskControlBlock>>,
 }
 
 impl TaskManager {

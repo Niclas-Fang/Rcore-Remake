@@ -52,7 +52,7 @@ impl PhyPageNum {
 impl VirtPageNum {
     pub fn index(&self) -> [usize; 3] {
         let vpn = self.0;
-        let idx0 = (vpn >> 0) & 0x1ff;
+        let idx0 = vpn & 0x1ff;
         let idx1 = (vpn >> 9) & 0x1ff;
         let idx2 = (vpn >> 18) & 0x1ff;
         [idx2, idx1, idx0]

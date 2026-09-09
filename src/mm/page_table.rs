@@ -27,9 +27,7 @@ pub struct PageTableEntry(usize);
 
 impl PageTableEntry {
     pub fn new(ppn: PhyPageNum, flags: PTEFlags) -> Self {
-        Self {
-            0: ppn.0 << 10 | flags.bits() as usize,
-        }
+        Self(ppn.0 << 10 | flags.bits() as usize)
     }
     pub fn empty() -> Self {
         Self(0)
