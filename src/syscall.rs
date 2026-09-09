@@ -1,7 +1,7 @@
 mod fd;
 mod process;
 
-use crate::config::{SYS_EXIT, SYS_GET_TIME, SYS_WRITE, SYS_YIELD};
+use crate::config::{SYS_EXIT, SYS_FORK, SYS_GET_TIME, SYS_WRITE, SYS_YIELD};
 
 pub fn sys_call(which: usize, args: [usize; 3]) -> usize {
     match which {
@@ -11,6 +11,7 @@ pub fn sys_call(which: usize, args: [usize; 3]) -> usize {
         }
         SYS_YIELD => process::sys_yield(),
         SYS_GET_TIME => process::sys_get_time(),
+        SYS_FORK => process::sys_fork(),
         _ => {
             panic!("Unsupported sys_call");
         }

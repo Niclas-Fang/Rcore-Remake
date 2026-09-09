@@ -22,7 +22,7 @@ use crate::{
         page_table::{PTEFlags, PageTable},
     },
 };
-
+#[derive(Clone, Copy)]
 pub enum MapType {
     Identical,
     Framed,
@@ -92,10 +92,10 @@ impl MemorySet {
         &mut self,
         start: VirtAddr,
         end: VirtAddr,
-        perm: MapPermission,
-        type_: MapType,
+        map_perm: MapPermission,
+        map_type: MapType,
     ) {
-        let mut area = MapArea::new(type_, perm, start, end);
+        let mut area = MapArea::new(map_type, map_perm, start, end);
         area.map(&mut self.page_table);
         self.areas.push(area);
     }
@@ -129,114 +129,74 @@ impl MemorySet {
             static ebss: usize;
             static ekernel: usize;
         }
-        let mut memory_set = Self::new();
+        let mut kernel = Self::new();
         unsafe {
-            memory_set.map_area(
+            kernel.map_area(
                 VirtAddr(&stext as *const usize as usize),
                 VirtAddr(&etext as *const usize as usize),
                 MapPermission::R | MapPermission::X,
                 MapType::Identical,
             );
-            memory_set.map_area(
+            kernel.map_area(
                 VirtAddr(&srodata as *const usize as usize),
                 VirtAddr(&erodata as *const usize as usize),
                 MapPermission::R,
                 MapType::Identical,
             );
-            memory_set.map_area(
+            kernel.map_area(
                 VirtAddr(&sdata as *const usize as usize),
                 VirtAddr(&edata as *const usize as usize),
                 MapPermission::R | MapPermission::W,
                 MapType::Identical,
             );
-            memory_set.map_area(
+            kernel.map_area(
                 VirtAddr(&sbss as *const usize as usize),
                 VirtAddr(&ebss as *const usize as usize),
                 MapPermission::R | MapPermission::W,
                 MapType::Identical,
             );
-            memory_set.map_area(
+            kernel.map_area(
                 VirtAddr(&ekernel as *const usize as usize),
                 VirtAddr(MEMORY_END),
                 MapPermission::R | MapPermission::W,
                 MapType::Identical,
             );
-            memory_set.map_trampoline();
-            memory_set
+            kernel.map_trampoline();
+            kernel
         }
     }
-    // pub fn from_app(app_id: usize) -> Self {
-    //     let mut memory_set = MemorySet::new();
-    //     let len = link_app::APPS[app_id].len();
-    //     memory_set.map_trampoline();
-    //     memory_set.map_area(
-    //         VirtAddr(USER_BASE_VA),
-    //         VirtAddr(USER_BASE_VA + len),
-    //         MapPermission::R | MapPermission::W | MapPermission::X | MapPermission::U,
-    //         MapType::Framed,
-    //     );
-    //     memory_set.map_area(
-    //         VirtAddr(TRAP_CONTEXT - USER_STACK_SIZE),
-    //         VirtAddr(TRAP_CONTEXT),
-    //         MapPermission::W | MapPermission::R | MapPermission::U,
-    //         MapType::Framed,
-    //     );
-    //     memory_set.map_area(
-    //         VirtAddr(TRAP_CONTEXT),
-    //         VirtAddr(TRAMPOLINE),
-    //         MapPermission::R | MapPermission::W,
-    //         MapType::Framed,
-    //     );
-    //     memory_set.copy_data(app_id);
-    //     memory_set
-    // }
-    // fn copy_data(&mut self, app_id: usize) {
-    //     if app_id >= link_app::NUM_APPS {
-    //         panic!("APP number exceeds existing numbers!")
-    //     }
-    //     let app = link_app::APPS[app_id];
-    //     let va_base = VirtAddr(USER_BASE_VA).floor();
-    //     for (i, chunk) in app.chunks(PAGE_SIZE).enumerate() {
-    //         let va = VirtPageNum(va_base.0 + i);
-    //         let ppn = self
-    //             .page_table
-    //             .translate(va)
-    //             .expect("App text stack overflow!");
-    //         unsafe { copy(chunk.as_ptr(), (ppn.0 << 12) as *mut u8, chunk.len()) }
-    //     }
-    // }
-    pub fn from_app(data: &[u8]) -> Self {
-        let mut memory_set = MemorySet::new();
-        let len = data.len();
-        memory_set.map_trampoline();
-        memory_set.map_area(
+    pub fn from_bin(bin: &[u8]) -> Self {
+        let mut app = MemorySet::new();
+        let len = bin.len();
+        app.map_trampoline();
+        app.map_area(
             VirtAddr(USER_BASE_VA),
             VirtAddr(USER_BASE_VA + len),
             MapPermission::R | MapPermission::W | MapPermission::X | MapPermission::U,
             MapType::Framed,
         );
-        memory_set.map_area(
+        app.map_area(
             VirtAddr(TRAP_CONTEXT - USER_STACK_SIZE),
             VirtAddr(TRAP_CONTEXT),
             MapPermission::W | MapPermission::R | MapPermission::U,
             MapType::Framed,
         );
-        memory_set.map_area(
+        app.map_area(
             VirtAddr(TRAP_CONTEXT),
             VirtAddr(TRAMPOLINE),
             MapPermission::R | MapPermission::W,
             MapType::Framed,
         );
-        memory_set.copy_bin(data);
-        memory_set
+        app.copy_bin(bin);
+        app
     }
     fn copy_bin(&mut self, bin: &[u8]) {
-        let va_base = VirtAddr(USER_BASE_VA).floor();
+        let vpn_base = VirtAddr(USER_BASE_VA).floor();
         for (i, chunk) in bin.chunks(PAGE_SIZE).enumerate() {
-            let va = VirtPageNum(va_base.0 + i);
+            let vpn = VirtPageNum(vpn_base.0 + i);
             let ppn = self
                 .page_table
-                .translate(va)
+                .translate(vpn)
                 .expect("App text stack overflow!");
             unsafe { copy(chunk.as_ptr(), (ppn.0 << 12) as *mut u8, chunk.len()) }
         }
@@ -244,15 +204,13 @@ impl MemorySet {
     pub fn translate(&self, vpn: VirtPageNum) -> Option<PhyPageNum> {
         self.page_table.translate(vpn)
     }
-    pub fn remap_trap_context(&mut self, trap_cx_ppn: PhyPageNum) {
+    pub fn remap_trap_cx(&mut self, trap_cx_ppn: PhyPageNum) {
         self.page_table.unmap(VirtAddr(TRAP_CONTEXT).floor());
         self.page_table.map(
             VirtAddr(TRAP_CONTEXT).floor(),
             trap_cx_ppn,
             PTEFlags::R | PTEFlags::W,
         );
-        // 关键：TLB 里可能残留旧映射（上一个任务的 trap_cx 页），
-        // 不刷的话 __restore 会读到旧任务的上下文，sret 回旧代码。
         sfence_vma_all();
     }
     pub fn remove_area(&mut self, start_vpn: VirtPageNum) {
@@ -263,6 +221,29 @@ impl MemorySet {
             .expect("Cannot find map area with given vpn {pid}!");
         self.areas[index].unmap(&mut self.page_table);
         self.areas.remove(index);
+    }
+    pub fn from_parent(parent: &Self) -> Self {
+        let mut child = Self::new();
+        child.map_trampoline();
+        for area in &parent.areas {
+            let start = VirtAddr(area.vpn_range.start.0 << 12);
+            let end = VirtAddr(area.vpn_range.end.0 << 12);
+            let map_perm = area.map_perm;
+            let map_type = area.map_type;
+            child.map_area(start, end, map_perm, map_type);
+            for vpn in area.vpn_range.start.0..area.vpn_range.end.0 {
+                let parent_ppn = parent.page_table.translate(VirtPageNum(vpn)).unwrap();
+                let child_ppn = child.page_table.translate(VirtPageNum(vpn)).unwrap();
+                unsafe {
+                    copy(
+                        (parent_ppn.0 << 12) as *const u8,
+                        (child_ppn.0 << 12) as *mut u8,
+                        PAGE_SIZE,
+                    );
+                }
+            }
+        }
+        child
     }
 }
 
@@ -277,7 +258,7 @@ pub fn kernel_satp() -> usize {
     KERNEL_SPACE.borrow().token()
 }
 pub fn remap_trap_context(trap_cx_ppn: PhyPageNum) {
-    KERNEL_SPACE.borrow_mut().remap_trap_context(trap_cx_ppn);
+    KERNEL_SPACE.borrow_mut().remap_trap_cx(trap_cx_ppn);
 }
 pub fn map_kernel_area(start: VirtAddr, end: VirtAddr, perm: MapPermission, type_: MapType) {
     KERNEL_SPACE.borrow_mut().map_area(start, end, perm, type_);
