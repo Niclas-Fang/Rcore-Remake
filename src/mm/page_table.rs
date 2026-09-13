@@ -126,6 +126,13 @@ impl PageTable {
         }
         Some(pte.ppn())
     }
+    pub fn translate_va(&self, va: VirtAddr) -> Option<PhyAddr> {
+        let (vpn, offset) = (va.floor(), va.page_offset());
+        let ppn = self.translate(vpn)?;
+        let pa = PhyAddr((ppn.0 << 12) + offset);
+        Some(pa)
+    }
+
     pub fn from_token(satp: usize) -> Self {
         Self {
             root_ppn: PhyPageNum(satp & ((1 << 44) - 1)),
@@ -151,5 +158,17 @@ impl PageTable {
             start = end_va.0;
         }
         Some(v)
+    }
+}
+pub fn str_from_path(token: usize, mut virt_addr: usize) -> String {
+    let page_table = PageTable::from_token(token);
+    let mut string = String::new();
+    loop {
+        let ch = unsafe { *(page_table.translate_va(VirtAddr(virt_addr)).unwrap().0 as *const u8) };
+        if ch == 0 {
+            return string;
+        };
+        string.push(ch as char);
+        virt_addr += 1;
     }
 }

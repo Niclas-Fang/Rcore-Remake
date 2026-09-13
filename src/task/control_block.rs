@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     config::{TRAP_CONTEXT, USER_BASE_VA},
-    mm::{MemorySet, PhyPageNum, VirtAddr, kernel_satp},
+    mm::{MemorySet, PhyPageNum, VirtAddr, kernel_satp, remap_trap_context},
     sync_refcell::SyncRefCell,
     task::pid::pid_alloc,
     trap::{TrapContext, trap_handler},
@@ -107,5 +107,30 @@ impl TaskControlBlock {
         };
         self.inner.borrow_mut().children.push(child.clone());
         child
+    }
+    pub fn exec(&self, bin: &[u8]) {
+        let memory_set = MemorySet::from_bin(bin);
+        let trap_cx_ppn = memory_set
+            .translate(VirtAddr(TRAP_CONTEXT).floor())
+            .unwrap();
+        let page_table_token = memory_set.token();
+
+        let cx_ptr = trap_cx_ppn.get_bytes_array().as_mut_ptr() as *mut TrapContext;
+        unsafe {
+            cx_ptr.write(TrapContext::init(
+                USER_BASE_VA,
+                TRAP_CONTEXT,
+                kernel_satp(),
+                page_table_token,
+                self.kernel_stack.sp(),
+                trap_handler as *const () as usize,
+            ));
+        }
+        remap_trap_context(trap_cx_ppn);
+
+        let mut inner = self.inner.borrow_mut();
+        inner.trap_cx_ppn = trap_cx_ppn;
+        inner.page_table_token = page_table_token;
+        inner.memory_set = memory_set;
     }
 }
