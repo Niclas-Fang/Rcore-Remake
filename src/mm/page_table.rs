@@ -1,4 +1,5 @@
-use alloc::{vec, vec::Vec};
+use alloc::vec;
+use alloc::{string::String, vec::Vec};
 use core::slice::from_raw_parts_mut;
 
 use bitflags::bitflags;
@@ -134,16 +135,13 @@ impl PageTable {
     pub fn token(&self) -> usize {
         (8usize << 60) | self.root_ppn.0
     }
-    /// 把用户虚拟地址 `ptr` 起 `len` 字节的缓冲区，按页切成物理上
-    /// 连续的切片（内核不映射用户空间，访问用户缓冲必须经此翻译）。
-    /// 任一页翻译失败（非法地址）返回 `None`。
     pub fn translated_byte_buffer(
         &self,
         ptr: *const u8,
         len: usize,
     ) -> Option<Vec<&'static mut [u8]>> {
         let mut start = ptr as usize;
-        let end = start.checked_add(len)?; // 溢出检查
+        let end = start.checked_add(len)?;
         let mut v = Vec::new();
         while start < end {
             let start_va = VirtAddr(start);
