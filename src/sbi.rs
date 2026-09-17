@@ -29,8 +29,10 @@ pub fn shutdown() -> ! {
 
 pub fn set_timer(time: usize) {
     unsafe {
-        asm!("ecall",
+        asm!(
+            "ecall",
         in("a7") 0u64,
-        in("a0") time)
+            in("a0") time
+        )
     }
 }
