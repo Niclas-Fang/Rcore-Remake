@@ -53,6 +53,8 @@ fn main() -> std::io::Result<()> {
             .args([
                 "--binary-architecture=riscv64",
                 "--strip-all",
+                "--set-section-flags",
+                ".bss=alloc,load,contents",
                 "-O",
                 "binary",
                 path_elf,
