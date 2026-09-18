@@ -31,8 +31,20 @@ pub fn set_timer(time: usize) {
     unsafe {
         asm!(
             "ecall",
-        in("a7") 0u64,
+            in("a7") 0u64,
             in("a0") time
         )
     }
+}
+
+pub fn getchar() -> u8 {
+    let ret;
+    unsafe {
+        asm!(
+            "ecall",
+            in("a7") 2u64,
+            out("a0") ret
+        )
+    }
+    ret
 }

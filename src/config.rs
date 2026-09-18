@@ -28,6 +28,7 @@ pub const CLOCK_FREQ: usize = 10_000_000;
 
 pub const TICK_PER_SEC: usize = 100;
 
+pub const SYS_READ: usize = 63;
 pub const SYS_WRITE: usize = 64;
 pub const SYS_EXIT: usize = 93;
 pub const SYS_YIELD: usize = 124;
@@ -36,6 +37,7 @@ pub const SYS_FORK: usize = 220;
 pub const SYS_EXEC: usize = 221;
 
 pub const STD_OUTPUT: usize = 1;
+pub const STD_INPUT: usize = 0;
 
 pub const TRAMPOLINE: usize = 0xFFFFFFFFFFFFF000;
 
