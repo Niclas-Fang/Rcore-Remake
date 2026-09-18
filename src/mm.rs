@@ -11,4 +11,4 @@ pub use memory_set::{
     MapPermission, MapType, MemorySet, activate, kernel_satp, map_kernel_area, remap_trap_context,
     remove_area,
 };
-pub use page_table::{PageTable, buffer_from_path, str_from_path};
+pub use page_table::{buffer_from_path, str_from_path};

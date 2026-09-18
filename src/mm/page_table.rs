@@ -142,23 +142,6 @@ impl PageTable {
     pub fn token(&self) -> usize {
         (8usize << 60) | self.root_ppn.0
     }
-    pub fn translated_byte_buffer(
-        &self,
-        ptr: *const u8,
-        len: usize,
-    ) -> Option<Vec<&'static mut [u8]>> {
-        let mut start = ptr as usize;
-        let end = start.checked_add(len)?;
-        let mut v = Vec::new();
-        while start < end {
-            let start_va = VirtAddr(start);
-            let ppn = self.translate(start_va.floor())?;
-            let end_va = VirtAddr(end.min((start + PAGE_SIZE) - (start & (PAGE_SIZE - 1))));
-            v.push(&mut ppn.get_bytes_array()[start_va.page_offset()..end_va.page_offset()]);
-            start = end_va.0;
-        }
-        Some(v)
-    }
 }
 pub fn str_from_path(token: usize, mut virt_addr: usize) -> String {
     let page_table = PageTable::from_token(token);
