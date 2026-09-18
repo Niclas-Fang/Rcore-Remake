@@ -172,3 +172,26 @@ pub fn str_from_path(token: usize, mut virt_addr: usize) -> String {
         virt_addr += 1;
     }
 }
+pub fn buffer_from_path(token: usize, ptr: *const u8, len: usize) -> Vec<&'static mut [u8]> {
+    let page_table = PageTable::from_token(token);
+    let mut start = ptr as usize;
+    let end = start + len;
+    let mut v = Vec::new();
+    while start < end {
+        let start_va = VirtAddr(start);
+        let mut vpn = start_va.floor();
+        let ppn = page_table.translate(vpn).unwrap();
+        vpn.0 += 1;
+        let mut end_va: VirtAddr = vpn.into();
+        if end_va.0 > end {
+            end_va = VirtAddr(end);
+        }
+        if end_va.page_offset() == 0 {
+            v.push(&mut ppn.get_bytes_array()[start_va.page_offset()..]);
+        } else {
+            v.push(&mut ppn.get_bytes_array()[start_va.page_offset()..end_va.page_offset()]);
+        }
+        start = end_va.0;
+    }
+    v
+}

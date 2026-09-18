@@ -1,7 +1,6 @@
 use std::fs::{read_dir, write};
 
 const USER_BIN_DIR: &str = "./target/riscv64gc-unknown-none-elf/release";
-// use std::fs::{read_dir,File};
 fn main() -> std::io::Result<()> {
     // 内核链接脚本（绝对路径，避免与 user 包的 rustflags 冲突）
     println!(
@@ -47,7 +46,6 @@ fn main() -> std::io::Result<()> {
     }
     let app_num = bins.len();
     for bin in &bins {
-        // 只在 user 产物变化时重跑 build.rs（避免每次编译都重新生成 .bin 触发内核重编）
         println!("cargo:rerun-if-changed={}", bin.to_str().unwrap());
         let path_elf = bin.to_str().unwrap();
         let path_bin = format!("{path_elf}.bin");
@@ -65,7 +63,6 @@ fn main() -> std::io::Result<()> {
     }
     let apps: Vec<_> = bins
         .iter()
-        //.map(|path| path.file_name().unwrap().to_str().unwrap().to_owned() + ".bin")
         .filter_map(|path| Some(path.file_name()?.to_str()?.to_owned()))
         .collect();
     let app_names = apps
@@ -101,7 +98,6 @@ pub static APPS: &[&[u8]] = &[{apps_str}];"#
 pub static APP_NAMES: &[&str] = &[{app_names}];"#
     );
     write("src/link_app.rs", content)?;
-    //println!("cargo:warning={:?}",bins);
     Ok(())
 }
 
